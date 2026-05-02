@@ -1,25 +1,19 @@
 """
 Iara Bot - Assistente Jurídica em Direito da Saúde
-Versão com importação direta do flow.py
+Versão standalone - NÃO precisa de estrutura de pastas
 """
 
 import streamlit as st
-import sys
-import os
 from datetime import datetime
+from typing import Optional, Callable, Dict
+from dataclasses import dataclass
 
-# Adicionar o diretório atual ao path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-# Importar do flow.py
-from app.services.flow import ETAPAS, _sim, _nao
-from app.config import get_settings
-
-# Configurações
-settings = get_settings()
-L = settings.lawyer_name
-CALENDLY_LINK = settings.calendly_link
-PIX_KEY = settings.pix_key
+# ============================================
+# CONFIGURAÇÕES
+# ============================================
+CALENDLY_LINK = "https://calendly.com/dra-lethicia"
+PIX_KEY = "dra.lethicia@adv.br"
+L = "Dra. Lethícia Fernanda"
 
 st.set_page_config(
     page_title="Iara Bot - Assistente Jurídica",
@@ -61,12 +55,6 @@ st.markdown("""
         border-radius: 10px;
         background-color: #fafafa;
     }
-    .sidebar-box {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
     .stButton button {
         background-color: #2c7be5;
         color: white;
@@ -75,121 +63,306 @@ st.markdown("""
     hr {
         margin: 1rem 0;
     }
+    .info-box {
+        background-color: #e8f5e9;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# ============================================
+# FUNÇÕES AUXILIARES
+# ============================================
+
+def _n(r: str) -> str:
+    return str(r).strip().lower()
+
+def _sim(r: str) -> bool:
+    return any(p in _n(r) for p in ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo", "1", "sozinha", "sozinho"])
+
+def _nao(r: str) -> bool:
+    return any(p in _n(r) for p in ["não", "nao", "no", "2", "depois", "sem", "agora não"])
+
+EMENTA = "[COLE A EMENTA AQUI]"
+
+# ============================================
+# CLASSE ETAPA
+# ============================================
+
+@dataclass
+class Etapa:
+    nome: str
+    pergunta: str
+    opcoes: Optional[list] = None
+    proxima: Optional[str] = None
+    router: Optional[Callable] = None
+    salvar_em: Optional[str] = None
+
+ETAPAS: Dict[str, Etapa] = {}
+
+def _r(e: Etapa):
+    ETAPAS[e.nome] = e
+    return e
+
+# ══════════════════════════════════════════════════════
+# ENTRADA
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="INICIO",
+    pergunta=(
+        "Olá, seja bem vindo(a). 🌹\n"
+        "Sou a Iara, assistente jurídica do escritório da Dra Lethicia Fernanda, "
+        "advogada especialista em Direito da Saúde. "
+        "Fico feliz que você entrou em contato conosco. Qual o seu nome?"
+    ),
+    proxima="CANAL",
+))
+
+_r(Etapa(
+    nome="CANAL",
+    pergunta="Seu atendimento é pelo *SUS* ou por *Plano de Saúde*?",
+    opcoes=["SUS", "Plano de Saúde"],
+    router=lambda r: "SUS_CATEGORIA" if "sus" in _n(r) else "PS_TEMPO",
+    salvar_em="canal",
+))
+
+# ══════════════════════════════════════════════════════
+# BLOCO SUS
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="SUS_CATEGORIA",
+    pergunta="Me diga o que você está aguardando?",
+    opcoes=["Cirurgia / Tratamento", "Consultas / Exames"],
+    router=lambda r: "SUS_ESPECIALIDADE" if any(p in _n(r) for p in ["cirurgia", "tratamento", "1"]) else "SUS_CONSULTA_TIPO",
+    salvar_em="categoria",
+))
+
+_r(Etapa(
+    nome="SUS_ESPECIALIDADE",
+    pergunta="Para que eu direcione você para o protocolo de urgência correto, qual problema estamos enfrentando hoje?",
+    opcoes=["Oncologia", "Neurodivergências (TEA, TDAH)", "Endometriose", "Medicamento", "Bariátrica", "Reparadora", "Neurologia", "Cardiologia", "Outros"],
+    router=lambda r: (
+        "POS_SUS" if any(p in _n(r) for p in ["oncologia", "câncer", "1"]) else
+        "POS_SUS" if any(p in _n(r) for p in ["tea", "neuro", "2"]) else
+        "POS_SUS"
+    ),
+    salvar_em="especialidade",
+))
+
+# ══════════════════════════════════════════════════════
+# SUS — CONSULTAS / EXAMES
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="SUS_CONSULTA_TIPO",
+    pergunta="Para que eu direcione você para o protocolo correto, qual problema estamos enfrentando hoje?",
+    opcoes=["Consulta especializada", "Exame específico"],
+    router=lambda r: "SUS_CONSULTA_PERGS" if "consulta" in _n(r) else "SUS_EXAME_PERGS",
+    salvar_em="subarea",
+))
+
+_r(Etapa(
+    nome="SUS_CONSULTA_PERGS",
+    pergunta="Entendi que você está aguardando uma consulta especializada. Qual especialidade médica você está aguardando?",
+    proxima="SUS_CONSULTA_DOC",
+    salvar_em="especialidade_consulta",
+))
+
+_r(Etapa(
+    nome="SUS_CONSULTA_DOC",
+    pergunta="Você tem encaminhamento ou pedido médico pra essa consulta?",
+    proxima="POS_SUS",
+    salvar_em="tem_encaminhamento",
+))
+
+_r(Etapa(
+    nome="SUS_EXAME_PERGS",
+    pergunta="Qual exame o médico solicitou pra você?",
+    proxima="POS_SUS",
+    salvar_em="exame_solicitado",
+))
+
+# ══════════════════════════════════════════════════════
+# PÓS PERGUNTAS SUS
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="POS_SUS",
+    pergunta=(
+        "Pelos dados que você enviou, fica claro que o seu caso não é apenas uma 'espera comum'. "
+        "No SUS, o governo muitas vezes usa a fila da regulação para camuflar a falta de investimento.\n\n"
+        "Para resolver isso, eu trabalho com um *Protocolo de Liberação Urgente*. "
+        "Isso faria diferença na sua vida agora?"
+    ),
+    proxima="HONORARIOS_SUS",
+))
+
+_r(Etapa(
+    nome="HONORARIOS_SUS",
+    pergunta=(
+        "Como é um trabalho de alta especialidade, o escritório cobra *Honorários Iniciais* "
+        "para assumir o caso e protocolar o pedido de liminar.\n\n"
+        "Prosseguir com esse caso faz sentido para você garantir sua saúde hoje?"
+    ),
+    router=lambda r: "FECHAMENTO_SIM" if _sim(r) else "FECHAMENTO_NAO",
+    salvar_em="resposta_final",
+))
+
+# ══════════════════════════════════════════════════════
+# BLOCO PLANO DE SAÚDE
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="PS_TEMPO",
+    pergunta="Você já tem seu plano de saúde há mais de 2 anos?",
+    opcoes=["Sim, mais de 2 anos", "Não, menos de 2 anos"],
+    router=lambda r: "PS_SITUACAO" if _sim(r) else "PS_NAO_2ANOS",
+))
+
+_r(Etapa(nome="PS_NAO_2ANOS", proxima="PS_NAO_2ANOS_Q2",
+    pergunta="Me conta, qual o tratamento que você precisa fazer?"))
+
+_r(Etapa(nome="PS_NAO_2ANOS_Q2", proxima="POS_PS",
+    pergunta="O médico comentou se isso é urgente ou pode trazer algum risco se não for feito?"))
+
+_r(Etapa(
+    nome="PS_SITUACAO",
+    pergunta="Para que eu possa te direcionar corretamente, qual é a sua situação atual com o plano de saúde?",
+    opcoes=["Reparadora", "Negativa de cirurgia", "Medicamento negado", "Exame negado", "Home care", "Terapias", "Reajuste", "Coparticipação", "Erro médico", "OUTRO"],
+    router=lambda r: "POS_PS",
+    salvar_em="tipo_negativa_plano",
+))
+
+# ══════════════════════════════════════════════════════
+# PÓS PERGUNTAS PLANO DE SAÚDE
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="POS_PS",
+    pergunta=(
+        "Obrigado pelas informações. Agora me diz: o que você está buscando?\n\n"
+        "1️⃣ Quero apenas tirar dúvidas básicas\n"
+        "2️⃣ Já tenho a negativa do plano\n"
+        "3️⃣ Não tenho a negativa mas sei que o plano vai negar"
+    ),
+    router=lambda r: (
+        "POS_PS_DUVIDAS" if "1" in r else
+        "POS_PS_NEGATIVA" if "2" in r else
+        "POS_PS_PREVENTIVO"
+    ),
+))
+
+_r(Etapa(nome="POS_PS_DUVIDAS", proxima="FECHAMENTO_SIM",
+    pergunta=(
+        "Ofereço uma *consulta de orientação jurídica* — você fala diretamente com a Dra.\n\n"
+        f"💰 Valor: R$ 97,00\n\n"
+        f"Podemos agendar um horário na agenda da {L}?"
+    )))
+
+_r(Etapa(nome="POS_PS_NEGATIVA", proxima="FECHAMENTO_SIM",
+    pergunta=(
+        "Você está no momento exato de agirmos judicialmente.\n\n"
+        "Vou te encaminhar para a agenda da Dra. para uma reunião gratuita de diagnóstico."
+    )))
+
+_r(Etapa(nome="POS_PS_PREVENTIVO", proxima="FECHAMENTO_SIM",
+    pergunta=(
+        "Você é muito estratégico(a)! Vamos blindar seus laudos antes da negativa.\n\n"
+        "Vou te encaminhar para a agenda da Dra."
+    )))
+
+# ══════════════════════════════════════════════════════
+# FECHAMENTOS
+# ══════════════════════════════════════════════════════
+
+_r(Etapa(
+    nome="FECHAMENTO_SIM",
+    pergunta=(
+        "Ótimo! 💙\n\n"
+        "Vou encaminhar seus dados para a mesa da {lawyer} neste momento.\n\n"
+        "🔗 **Agende sua reunião:** {CALENDLY_LINK}\n\n"
+        "Fique atento(a)! 👀"
+    ),
+    proxima="FIM",
+))
+
+_r(Etapa(
+    nome="FECHAMENTO_NAO",
+    pergunta=(
+        "Compreendo. Infelizmente, sem ação judicial, seu caso continuará na fila.\n\n"
+        "Caso mude de ideia, estamos à disposição. Desejamos sorte no seu tratamento. 🙏"
+    ),
+    proxima="FIM",
+))
+
+_r(Etapa(nome="FIM", pergunta="", proxima=None))
 
 # ============================================
 # GERENCIAMENTO DE SESSÃO
 # ============================================
 
 def init_session_state():
-    """Inicializa todas as variáveis de sessão"""
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    
     if "estado_atual" not in st.session_state:
         st.session_state.estado_atual = "INICIO"
-    
     if "dados_coletados" not in st.session_state:
         st.session_state.dados_coletados = {}
-    
-    if "historico_respostas" not in st.session_state:
-        st.session_state.historico_respostas = []
-    
     if "nome_usuario" not in st.session_state:
         st.session_state.nome_usuario = None
 
 def add_bot_message(text: str):
-    """Adiciona mensagem do bot ao chat"""
     if not text:
         return
-    
-    # Substituir placeholders
     text = text.replace("{nome}", st.session_state.nome_usuario or "")
     text = text.replace("{lawyer}", L)
-    text = text.replace("__PIX__", f"**Chave PIX:** `{PIX_KEY}`\n\n**Valor:** R$ {settings.consulta_valor:.2f}")
-    text = text.replace("__AGUARDANDO__", "⏳ Aguardando confirmação de pagamento...")
-    text = text.replace("__EMAIL__", "📧 Por favor, informe seu e-mail para envio do contrato:")
-    text = text.replace("__HORARIO__", f"📅 Escolha o melhor horário na agenda:\n\n{CALENDLY_LINK}")
-    
-    st.session_state.messages.append({
-        "role": "bot",
-        "content": text,
-        "timestamp": datetime.now()
-    })
+    text = text.replace("{CALENDLY_LINK}", CALENDLY_LINK)
+    st.session_state.messages.append({"role": "bot", "content": text})
 
 def add_user_message(text: str):
-    """Adiciona mensagem do usuário ao chat"""
-    st.session_state.messages.append({
-        "role": "user",
-        "content": text,
-        "timestamp": datetime.now()
-    })
+    st.session_state.messages.append({"role": "user", "content": text})
 
 def get_etapa(estado: str):
-    """Recupera a etapa do ETAPAS"""
     return ETAPAS.get(estado)
 
 def processar_resposta(resposta: str):
-    """
-    Processa a resposta do usuário e avança no fluxo
-    """
     estado_atual = st.session_state.estado_atual
     etapa = get_etapa(estado_atual)
     
     if not etapa:
-        # Fallback: reiniciar
         st.session_state.estado_atual = "INICIO"
         add_bot_message(ETAPAS["INICIO"].pergunta)
         return
     
-    # Salvar nome se for início
     if estado_atual == "INICIO":
         st.session_state.nome_usuario = resposta
         st.session_state.dados_coletados["nome"] = resposta
     
-    # Salvar resposta se tiver campo de salvamento
     if etapa.salvar_em:
         st.session_state.dados_coletados[etapa.salvar_em] = resposta
     
-    # Registrar no histórico
-    st.session_state.historico_respostas.append({
-        "etapa": estado_atual,
-        "resposta": resposta,
-        "timestamp": datetime.now()
-    })
-    
-    # Determinar próximo estado
-    proximo_estado = None
-    
+    proximo = None
     if etapa.proxima and etapa.proxima != "FIM":
-        proximo_estado = etapa.proxima
+        proximo = etapa.proxima
     elif etapa.router:
         try:
-            proximo_estado = etapa.router(resposta)
-        except Exception as e:
-            # Se router falhar, tentar proxima
-            proximo_estado = etapa.proxima
+            proximo = etapa.router(resposta)
+        except:
+            proximo = etapa.proxima
     
-    # Se não tem próximo e é um estado especial, apenas mostra resposta
-    if not proximo_estado and etapa.pergunta in ["__PIX__", "__AGUARDANDO__", "__EMAIL__", "__HORARIO__"]:
-        # Estados especiais - não mudar estado
-        return
-    
-    # Atualizar estado
-    if proximo_estado:
-        st.session_state.estado_atual = proximo_estado
-        proxima_etapa = get_etapa(proximo_estado)
-        if proxima_etapa and proxima_etapa.pergunta:
-            add_bot_message(proxima_etapa.pergunta)
+    if proximo:
+        st.session_state.estado_atual = proximo
+        prox_etapa = get_etapa(proximo)
+        if prox_etapa and prox_etapa.pergunta:
+            add_bot_message(prox_etapa.pergunta)
     elif etapa.proxima == "FIM":
         st.session_state.estado_atual = "FIM"
-    else:
-        # Se não tem próximo, repetir pergunta
-        add_bot_message(etapa.pergunta)
 
 def reset_conversa():
-    """Reinicia toda a conversa"""
     st.session_state.clear()
     init_session_state()
     add_bot_message(ETAPAS["INICIO"].pergunta)
@@ -199,169 +372,58 @@ def reset_conversa():
 # ============================================
 
 def render_sidebar():
-    """Renderiza a barra lateral com status"""
     with st.sidebar:
-        st.markdown("## ⚖️ Iara Bot")
-        st.markdown(f"**{L}**")
+        st.markdown(f"## ⚖️ {L}")
         st.markdown("*Especialista em Direito da Saúde*")
         st.markdown("---")
         
-        st.markdown("### 📊 Status do Atendimento")
-        
         if st.session_state.nome_usuario:
             st.markdown(f"**Cliente:** {st.session_state.nome_usuario}")
-        
         if st.session_state.dados_coletados.get("canal"):
             st.markdown(f"**Canal:** {st.session_state.dados_coletados['canal']}")
-        
         if st.session_state.dados_coletados.get("categoria"):
-            st.markdown(f"**Categoria:** {st.session_state.dados_coletados['categoria']}")
-        
-        if st.session_state.dados_coletados.get("especialidade"):
-            st.markdown(f"**Especialidade:** {st.session_state.dados_coletados['especialidade']}")
-        
-        if st.session_state.dados_coletados.get("resposta_final"):
-            val = st.session_state.dados_coletados["resposta_final"]
-            st.markdown(f"**Resposta:** {'✅ Aceitou' if 'sim' in val.lower() else '❌ Recusou'}")
+            st.markdown(f"**Demanda:** {st.session_state.dados_coletados['categoria']}")
         
         st.markdown("---")
-        
-        if len(st.session_state.dados_coletados) > 0:
-            st.markdown("### 📋 Dados Coletados")
-            for key, value in list(st.session_state.dados_coletados.items())[:8]:
-                if key not in ["resposta_0", "resposta_1", "resposta_2", "resposta_3", "resposta_4"]:
-                    if value and len(str(value)) < 50:
-                        st.markdown(f"**{key}:** {str(value)[:40]}...")
-        
-        st.markdown("---")
-        
         if st.button("🔄 Nova Conversa", use_container_width=True):
             reset_conversa()
             st.rerun()
-        
-        st.markdown("---")
-        st.caption("💙 **Iara Bot v2.0**")
-        st.caption("Protocolo de Liberação Urgente")
 
 def render_chat():
-    """Renderiza o container do chat"""
     with st.container():
         st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-        
         for msg in st.session_state.messages:
             if msg["role"] == "bot":
-                content = msg["content"]
-                # Verificar se contém PIX ou link
-                if "PIX" in content or "pix" in content:
-                    st.markdown(f'<div class="chat-message bot-message"><strong>🤖 Iara:</strong></div>', unsafe_allow_html=True)
-                    st.info(content)
-                else:
-                    st.markdown(f'''
-                    <div class="chat-message bot-message">
-                        <strong>🤖 Iara:</strong><br>{content}
-                    </div>
-                    ''', unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-message bot-message"><strong>🤖 Iara:</strong><br>{msg["content"]}</div>', unsafe_allow_html=True)
             else:
                 nome = st.session_state.nome_usuario or "Você"
-                st.markdown(f'''
-                <div class="chat-message user-message">
-                    <strong>👤 {nome}:</strong><br>{msg["content"]}
-                </div>
-                ''', unsafe_allow_html=True)
-        
+                st.markdown(f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{msg["content"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 def render_opcoes_rapidas():
-    """Renderiza botões de opções rápidas baseado no estado atual"""
-    estado_atual = st.session_state.estado_atual
-    etapa = get_etapa(estado_atual)
+    estado = st.session_state.estado_atual
+    etapa = get_etapa(estado)
     
-    if not etapa or not etapa.opcoes:
-        return
-    
-    # Não mostrar opções para estados especiais
-    estados_especiais = ["PIX_APRESENTACAO", "AGUARDANDO_PAGAMENTO", "COLETAR_EMAIL", "ESCOLHER_HORARIO", "FIM"]
-    if estado_atual in estados_especiais:
+    if etapa and etapa.opcoes and estado not in ["FIM"]:
         st.markdown("---")
-        if estado_atual == "PIX_APRESENTACAO":
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("💰 Já paguei", use_container_width=True):
-                    add_user_message("Já paguei")
-                    st.session_state.estado_atual = "AGUARDANDO_PAGAMENTO"
-                    add_bot_message("⏳ Aguardando confirmação de pagamento...")
+        st.markdown("**🔘 Opções rápidas:**")
+        cols = st.columns(min(len(etapa.opcoes), 4))
+        for i, opcao in enumerate(etapa.opcoes[:4]):
+            with cols[i % 4]:
+                if st.button(opcao[:25], key=f"opt_{i}", use_container_width=True):
+                    add_user_message(opcao)
+                    processar_resposta(opcao)
                     st.rerun()
-            with col2:
-                if st.button("📋 Quero pagar agora", use_container_width=True):
-                    add_user_message("Quero pagar")
-                    st.markdown(f"""
-                    <div style="background-color: #e8f5e9; padding: 1rem; border-radius: 10px; margin: 1rem 0;">
-                        <strong>💳 Chave PIX:</strong><br>
-                        <code style="font-size: 1.2rem;">{PIX_KEY}</code><br><br>
-                        <strong>Valor:</strong> R$ {settings.consulta_valor:.2f}<br>
-                        <strong>Beneficiário:</strong> {L}
-                    </div>
-                    """, unsafe_allow_html=True)
-        
-        elif estado_atual == "AGUARDANDO_PAGAMENTO":
-            if st.button("✅ Confirmar pagamento", use_container_width=True):
-                add_user_message("Confirmar pagamento")
-                st.session_state.estado_atual = "COLETAR_EMAIL"
-                add_bot_message("📧 Por favor, informe seu e-mail para envio do contrato:")
-                st.rerun()
-        
-        elif estado_atual == "COLETAR_EMAIL":
-            email = st.text_input("Digite seu e-mail:", key="email_input")
-            if email and st.button("Enviar", use_container_width=True):
-                add_user_message(email)
-                st.session_state.dados_coletados["email"] = email
-                st.session_state.estado_atual = "ESCOLHER_HORARIO"
-                add_bot_message(f"📅 Escolha o melhor horário na agenda:\n\n{CALENDLY_LINK}")
-                st.rerun()
-        
-        elif estado_atual == "ESCOLHER_HORARIO":
-            st.markdown(f"[📅 Clique aqui para agendar]({CALENDLY_LINK})")
-            if st.button("✅ Já agendei", use_container_width=True):
-                add_user_message("Já agendei")
-                st.session_state.estado_atual = "FIM"
-                add_bot_message("Ótimo! Em breve a Dra. Lethícia entrará em contato. 💙")
-                st.rerun()
-        
-        return
-    
-    st.markdown("---")
-    st.markdown("**🔘 Opções rápidas:**")
-    
-    # Criar botões para as opções
-    cols = st.columns(min(len(etapa.opcoes), 4))
-    for i, opcao in enumerate(etapa.opcoes[:4]):
-        with cols[i % 4]:
-            btn_text = opcao if len(opcao) <= 25 else opcao[:22] + "..."
-            if st.button(btn_text, key=f"opt_{estado_atual}_{i}", use_container_width=True):
-                add_user_message(opcao)
-                processar_resposta(opcao)
-                st.rerun()
 
 def render_input():
-    """Renderiza o campo de input principal"""
-    estado_atual = st.session_state.estado_atual
-    
-    if estado_atual == "FIM":
+    estado = st.session_state.estado_atual
+    if estado == "FIM":
         st.info("✨ Atendimento finalizado. Clique em 'Nova Conversa' para recomeçar.")
         return
     
-    if estado_atual in ["PIX_APRESENTACAO", "AGUARDANDO_PAGAMENTO", "COLETAR_EMAIL", "ESCOLHER_HORARIO"]:
-        return
-    
     col1, col2 = st.columns([4, 1])
-    
     with col1:
-        user_input = st.text_input(
-            "Digite sua mensagem:",
-            key="user_input",
-            placeholder="Digite aqui sua resposta..."
-        )
-    
+        user_input = st.text_input("Digite sua mensagem:", key="user_input")
     with col2:
         send_button = st.button("📤 Enviar", use_container_width=True)
     
@@ -376,26 +438,21 @@ def render_input():
 
 def main():
     st.title("⚖️ Iara Bot - Assistente Jurídica em Direito da Saúde")
-    st.caption(f"{L} | Atendimento SUS, Planos de Saúde e INSS")
+    st.caption(f"{L} | Atendimento SUS e Planos de Saúde")
     
     init_session_state()
     
     col1, col2 = st.columns([3, 1])
-    
     with col1:
         render_chat()
         render_opcoes_rapidas()
         render_input()
-    
     with col2:
         render_sidebar()
     
-    # Mensagem inicial se não houver mensagens
     if len(st.session_state.messages) == 0:
-        etapa_inicio = get_etapa("INICIO")
-        if etapa_inicio:
-            add_bot_message(etapa_inicio.pergunta)
-            st.rerun()
+        add_bot_message(ETAPAS["INICIO"].pergunta)
+        st.rerun()
 
 if __name__ == "__main__":
     main()
