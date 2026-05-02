@@ -857,15 +857,13 @@ def processar(resposta: str):
         st.session_state.estado = "PS_BARI_Q6"
         add_bot(PS_BARI_Q6)
     elif estado == "PS_BARI_Q6":
-        dados["ps_bari_q6"] = resposta
-        st.session_state.estado = "PS_BARI_Q7"
-        add_bot(PS_BARI_Q7)
-    elif estado == "PS_BARI_Q7":
+           elif estado == "PS_BARI_Q7":
         dados["ps_bari_q7"] = resposta
         st.session_state.estado = "PS_BARI_Q8"
         add_bot(PS_BARI_Q8)
     elif estado == "PS_BARI_Q8":
-        dados["ps_bari_q8"] = resposta        st.session_state.estado = "PS_POS"
+        dados["ps_bari_q8"] = resposta
+        st.session_state.estado = "PS_POS"
         add_bot(PS_POS)
 
     # PS ONCOLOGIA
