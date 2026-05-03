@@ -1,6 +1,6 @@
 """
 Iara Bot - Assistente Jurídica em Direito da Saúde
-VERSÃO FINAL - SUS CORRIGIDO (REPARADORA REMOVIDA)
+VERSÃO FINAL COMPLETA - TODAS AS CORREÇÕES APLICADAS
 """
 
 import streamlit as st
@@ -129,7 +129,7 @@ MSG_CANAL = "Olá, {nome}! Seu atendimento é pelo **SUS** ou por **Plano de Sa�
 MSG_SUS_DEMANDA = "Me diga o que você está aguardando?\n\n1️⃣ Cirurgia / Tratamento\n2️⃣ Consultas / Exames"
 
 # ============================================
-# SUS ESPECIALIDADE CORRIGIDA (SEM REPARADORA)
+# SUS ESPECIALIDADE - CORRIGIDA (SEM REPARADORA)
 # ============================================
 MSG_SUS_ESPECIALIDADE = (
     "Para que eu direcione você para o protocolo de urgência correto, "
@@ -341,7 +341,7 @@ MSG_SEM_DOCUMENTOS = (
 )
 
 # ============================================
-# PLANO DE SAÚDE - MENSAGENS (MANTIDAS)
+# PLANO DE SAÚDE - MENSAGENS
 # ============================================
 
 PS_TEMPO = "Você já tem seu plano de saúde há mais de 2 anos?\n\n1️⃣ Sim\n2️⃣ Não"
@@ -594,19 +594,21 @@ DECISAO_REPASSE_SIM = f"Perfeito! Vamos agendar para vocês dois. Logo abaixo vo
 DECISAO_REPASSE_NAO = f"Entendido! Mantemos só entre nós. Logo abaixo vou te mandar a agenda da {L}.\n\n🔗 {CALENDLY_LINK}"
 
 # ============================================
-# PROCESSAMENTO DO FLUXO (resumido para não estourar)
+# PROCESSAMENTO DO FLUXO
 # ============================================
 
 def processar(resposta: str):
     estado = st.session_state.estado
     dados = st.session_state.dados
 
+    # INICIO
     if estado == "INICIO":
         st.session_state.nome = resposta
         dados["nome"] = resposta
         st.session_state.estado = "CANAL"
         add_bot(MSG_CANAL.format(nome=resposta))
 
+    # CANAL
     elif estado == "CANAL":
         if "sus" in _n(resposta):
             dados["canal"] = "SUS"
@@ -617,6 +619,7 @@ def processar(resposta: str):
             st.session_state.estado = "PLANO_TEMPO"
             add_bot(PS_TEMPO)
 
+    # SUS_DEMANDA
     elif estado == "SUS_DEMANDA":
         if "cirurgia" in _n(resposta) or "1" in resposta:
             dados["tipo"] = "cirurgia"
@@ -627,7 +630,7 @@ def processar(resposta: str):
             st.session_state.estado = "SUS_CONSULTA_EXAME"
             add_bot("Você está buscando:\n\n1️⃣ Consulta com especialista\n2️⃣ Realização de Exame")
 
-    # ========== SUS_ESPECIALIDADE CORRIGIDA ==========
+    # SUS_ESPECIALIDADE - CORRIGIDA (SEM REPARADORA)
     elif estado == "SUS_ESPECIALIDADE":
         if "oncologia" in _n(resposta) or "1" in resposta:
             st.session_state.perguntas_ativas = PERGUNTAS_ONCOLOGIA.copy()
@@ -651,8 +654,771 @@ def processar(resposta: str):
         st.session_state.estado = "SUS_PERGUNTAS"
         add_bot(st.session_state.perguntas_ativas[0])
 
-    # Continuar com o resto do processamento...
-    # (manter todos os outros estados do código anterior)
+    # SUS_PERGUNTAS
+    elif estado == "SUS_PERGUNTAS":
+        idx = st.session_state.pergunta_idx
+        perguntas = st.session_state.perguntas_ativas
+        
+        dados[f"resp_{idx}"] = resposta
+        
+        tem_laudo = any("sim" in _n(str(dados.get("resp_2", ""))))
+        tem_comprovante = any("sim" in _n(str(dados.get("resp_6", "")))) if len(perguntas) > 6 else False
+        
+        idx += 1
+        st.session_state.pergunta_idx = idx
+        
+        if idx < len(perguntas):
+            add_bot(perguntas[idx])
+        else:
+            if not tem_laudo or not tem_comprovante:
+                add_bot(MSG_SEM_DOCUMENTOS)
+                st.session_state.estado = "AGUARDANDO_DOCUMENTOS"
+            else:
+                st.session_state.estado = "POS_PERGUNTAS"
+                add_bot(MSG_POS_PERGUNTAS.format(nome=st.session_state.nome))
+
+    # AGUARDANDO_DOCUMENTOS
+    elif estado == "AGUARDANDO_DOCUMENTOS":
+        if _sim(resposta):
+            st.session_state.estado = "POS_PERGUNTAS"
+            add_bot(MSG_POS_PERGUNTAS.format(nome=st.session_state.nome))
+        else:
+            add_bot("Quando tiver os documentos, retorne aqui. Estamos à disposição! 😊")
+            st.session_state.estado = "FIM"
+
+    # POS_PERGUNTAS
+    elif estado == "POS_PERGUNTAS":
+        dados["sentimento"] = resposta
+        add_bot(MSG_EXPLICACAO)
+        st.session_state.estado = "PROPOSTA_JUDICIAL"
+
+    # PROPOSTA_JUDICIAL
+    elif estado == "PROPOSTA_JUDICIAL":
+        if _sim(resposta):
+            add_bot(MSG_HONORARIOS)
+            st.session_state.estado = "HONORARIOS"
+        else:
+            add_bot(MSG_NAO_PROPOSITA)
+            st.session_state.estado = "FIM"
+
+    # HONORARIOS
+    elif estado == "HONORARIOS":
+        if _sim(resposta):
+            add_bot("Perfeito. O próximo passo agora é uma reunião rápida para eu te explicar como funciona o processo e os valores de honorários.\n\nAntes de agendarmos: além de você, tem mais alguém que participa dessa decisão? (cônjuge, familiar…)")
+            st.session_state.estado = "DECISAO_COMPARTILHADA"
+        else:
+            add_bot(MSG_NAO_HONORARIOS)
+            st.session_state.estado = "FIM"
+
+    # DECISAO_COMPARTILHADA
+    elif estado == "DECISAO_COMPARTILHADA":
+        dados["decisao"] = resposta
+        if "sim, meu" in _n(resposta) or "1" in resposta:
+            add_bot(DECISAO_SIM)
+            st.session_state.link_enviado_em = datetime.now()
+            st.session_state.lembrete_enviado = False
+        elif "não" in _n(resposta) or "sozinha" in _n(resposta) or "sozinho" in _n(resposta) or "2" in resposta:
+            add_bot(DECISAO_NAO)
+            st.session_state.link_enviado_em = datetime.now()
+            st.session_state.lembrete_enviado = False
+        else:
+            add_bot(DECISAO_REPASSE)
+            st.session_state.estado = "DECISAO_REPASSE_RESPOSTA"
+            return
+        st.session_state.estado = "FIM"
+
+    # DECISAO_REPASSE_RESPOSTA
+    elif estado == "DECISAO_REPASSE_RESPOSTA":
+        if _sim(resposta):
+            add_bot(DECISAO_REPASSE_SIM)
+        else:
+            add_bot(DECISAO_REPASSE_NAO)
+        st.session_state.link_enviado_em = datetime.now()
+        st.session_state.lembrete_enviado = False
+        st.session_state.estado = "FIM"
+
+    # SUS_CONSULTA_EXAME
+    elif estado == "SUS_CONSULTA_EXAME":
+        if "consulta" in _n(resposta) or "1" in resposta:
+            dados["sub_tipo"] = "consulta"
+            st.session_state.perguntas_ativas = PERGUNTAS_CONSULTA.copy()
+            st.session_state.pergunta_idx = 0
+            st.session_state.estado = "SUS_PERGUNTAS"
+            add_bot(PERGUNTAS_CONSULTA[0])
+        else:
+            dados["sub_tipo"] = "exame"
+            st.session_state.perguntas_ativas = PERGUNTAS_EXAME.copy()
+            st.session_state.pergunta_idx = 0
+            st.session_state.estado = "SUS_EXAME_TIPO"
+            add_bot(PERGUNTAS_EXAME[0])
+
+    # SUS_EXAME_TIPO
+    elif estado == "SUS_EXAME_TIPO":
+        dados["exame_tipo"] = resposta
+        if "diagnóstico" in _n(resposta) or "1" in resposta:
+            st.session_state.perguntas_ativas = PERGUNTAS_EXAME_DIAG.copy()
+        elif "pré" in _n(resposta) or "2" in resposta:
+            st.session_state.perguntas_ativas = PERGUNTAS_EXAME_PREOP.copy()
+        else:
+            st.session_state.perguntas_ativas = PERGUNTAS_EXAME_CONF.copy()
+        
+        st.session_state.pergunta_idx = 0
+        st.session_state.estado = "SUS_PERGUNTAS"
+        add_bot(st.session_state.perguntas_ativas[0])
+
+    # PLANO_TEMPO
+    elif estado == "PLANO_TEMPO":
+        if _sim(resposta):
+            dados["plano_2anos"] = "sim"
+            st.session_state.estado = "PLANO_TIPO"
+            add_bot(PS_TIPO_PLANO)
+        else:
+            dados["plano_2anos"] = "nao"
+            st.session_state.estado = "PLANO_NAO_2ANOS"
+            add_bot(PS_NAO_2ANOS)
+
+    # PLANO_TIPO
+    elif estado == "PLANO_TIPO":
+        dados["plano_tipo"] = resposta
+        st.session_state.estado = "PLANO_SITUACAO"
+        add_bot(PS_SITUACAO)
+
+    # PLANO_NAO_2ANOS
+    elif estado == "PLANO_NAO_2ANOS":
+        dados["tratamento_sem_carencia"] = resposta
+        st.session_state.estado = "PLANO_NAO_2ANOS_URG"
+        add_bot(PS_NAO_2ANOS_URG)
+
+    # PLANO_NAO_2ANOS_URG
+    elif estado == "PLANO_NAO_2ANOS_URG":
+        dados["urgencia_plano"] = resposta
+        st.session_state.estado = "PLANO_URGENCIA"
+        add_bot(PS_URGENCIA)
+
+    # PLANO_URGENCIA
+    elif estado == "PLANO_URGENCIA":
+        dados["urgencia_confirmada"] = resposta
+        st.session_state.estado = "PROPOSTA_JUDICIAL"
+        add_bot("Perfeito! Para resolver isso, trabalho com um Protocolo de Liberação Urgente. Isso faria diferença na sua vida agora?")
+
+    # PLANO_SITUACAO
+    elif estado == "PLANO_SITUACAO":
+        dados["situacao"] = resposta
+        
+        if "reparadora" in _n(resposta) or "1" in resposta:
+            st.session_state.estado = "PS_REP_Q1"
+            add_bot(PS_REP_Q1)
+        elif "negativa de cirurgia" in _n(resposta) or "2" in resposta:
+            st.session_state.estado = "PS_NEG_CIR_ESP"
+            add_bot(PS_NEG_CIR_ESP)
+        elif "medicamento" in _n(resposta) or "3" in resposta:
+            st.session_state.estado = "PS_MED_Q1"
+            add_bot(PS_MED_Q1)
+        elif "exame" in _n(resposta) or "4" in resposta:
+            st.session_state.estado = "PS_EXAME_Q1"
+            add_bot(PS_EXAME_Q1)
+        elif "home" in _n(resposta) or "5" in resposta:
+            st.session_state.estado = "PS_HOME_Q1"
+            add_bot(PS_HOME_Q1)
+        elif "terapia" in _n(resposta) or "6" in resposta:
+            st.session_state.estado = "PS_TERA_Q1"
+            add_bot(PS_TERA_Q1)
+        elif "reajuste" in _n(resposta) or "7" in resposta:
+            st.session_state.estado = "PS_REAJ_Q1"
+            add_bot(PS_REAJ_Q1)
+        elif "coparticipação" in _n(resposta) or "8" in resposta:
+            st.session_state.estado = "PS_COPA_Q1"
+            add_bot(PS_COPA_Q1)
+        elif "erro" in _n(resposta) or "9" in resposta:
+            st.session_state.estado = "PS_ERRO_Q1"
+            add_bot(PS_ERRO_Q1)
+        else:
+            st.session_state.estado = "PS_OUTRO_Q1"
+            add_bot(PS_OUTRO_Q1)
+
+    # PS REPARADORA
+    elif estado == "PS_REP_Q1":
+        dados["ps_rep_q1"] = resposta
+        st.session_state.estado = "PS_REP_Q2"
+        add_bot(PS_REP_Q2)
+    elif estado == "PS_REP_Q2":
+        if "ainda não" in _n(resposta) or "2" in resposta:
+            add_bot(PS_REP_NAO_PESO)
+            st.session_state.estado = "PS_REP_AGUARDANDO"
+        else:
+            st.session_state.estado = "PS_REP_Q3"
+            add_bot(PS_REP_Q3_JUNTAS)
+    elif estado == "PS_REP_AGUARDANDO":
+        if _sim(resposta):
+            add_bot(f"Ótimo! Agende sua consulta: {CALENDLY_LINK}")
+            st.session_state.link_enviado_em = datetime.now()
+            st.session_state.lembrete_enviado = False
+        else:
+            add_bot(PS_ENCERRAMENTO)
+        st.session_state.estado = "FIM"
+    elif estado == "PS_REP_Q3":
+        dados["ps_rep_q3"] = resposta
+        st.session_state.estado = "PS_REP_Q4"
+        add_bot(PS_REP_Q4)
+    elif estado == "PS_REP_Q4":
+        dados["ps_rep_q4"] = resposta
+        st.session_state.estado = "PS_REP_Q5"
+        add_bot(PS_REP_Q5)
+    elif estado == "PS_REP_Q5":
+        dados["ps_rep_q5"] = resposta
+        st.session_state.estado = "PS_REP_Q6"
+        add_bot(PS_REP_Q6)
+    elif estado == "PS_REP_Q6":
+        if "acompanhamento" in _n(resposta) or "quero" in _n(resposta):
+            st.session_state.estado = "PS_POS_PLANO"
+            add_bot(PS_POS_CORRIGIDA)
+        else:
+            add_bot(PS_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+
+    # PS NEGATIVA DE CIRURGIA
+    elif estado == "PS_NEG_CIR_ESP":
+        dados["ps_cir_esp"] = resposta
+        if "endometriose" in _n(resposta) or "1" in resposta:
+            st.session_state.estado = "PS_ENDO_Q1"
+            add_bot(PS_ENDO_Q1)
+        elif "bariátrica" in _n(resposta) or "2" in resposta:
+            st.session_state.estado = "PS_BARI_Q1"
+            add_bot(PS_BARI_Q1)
+        elif "oncologia" in _n(resposta) or "3" in resposta:
+            st.session_state.estado = "PS_ONCO_Q1"
+            add_bot(PS_ONCO_Q1)
+        elif "cardiologia" in _n(resposta) or "4" in resposta:
+            st.session_state.estado = "PS_CARDIO_Q1"
+            add_bot(PS_CARDIO_Q1)
+        elif "neurocirurgia" in _n(resposta) or "5" in resposta:
+            st.session_state.estado = "PS_NEURO_Q1"
+            add_bot(PS_NEURO_Q1)
+        elif "ortopedia" in _n(resposta) or "6" in resposta:
+            st.session_state.estado = "PS_ORTO_Q1"
+            add_bot(PS_ORTO_Q1)
+        elif "oftalmologia" in _n(resposta) or "7" in resposta:
+            st.session_state.estado = "PS_OFTAL_Q1"
+            add_bot(PS_OFTAL_Q1)
+        else:
+            st.session_state.estado = "PS_CIR_OUTRO"
+            add_bot("Entendido! Cada procedimento cirúrgico tem a sua importância.\n\n👉 Qual cirurgia foi indicada pelo seu médico?")
+        return
+
+    # PS CIR OUTRO
+    elif estado == "PS_CIR_OUTRO":
+        dados["ps_cir_outro"] = resposta
+        st.session_state.estado = "PS_CIR_OUTRO_Q2"
+        add_bot("👉 Para qual problema ou doença ela foi recomendada?")
+    elif estado == "PS_CIR_OUTRO_Q2":
+        dados["ps_cir_outro_diagnostico"] = resposta
+        st.session_state.estado = "PS_CIR_OUTRO_Q3"
+        add_bot("👉 Você possui exames que comprovam a necessidade?\n\n1️⃣ Sim\n2️⃣ Não")
+    elif estado == "PS_CIR_OUTRO_Q3":
+        dados["ps_cir_outro_exames"] = resposta
+        st.session_state.estado = "PS_CIR_OUTRO_Q4"
+        add_bot("👉 A cirurgia foi negada?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Ainda não solicitei")
+    elif estado == "PS_CIR_OUTRO_Q4":
+        dados["ps_cir_outro_negada"] = resposta
+        st.session_state.estado = "PS_CIR_OUTRO_Q5"
+        add_bot("👉 O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')")
+    elif estado == "PS_CIR_OUTRO_Q5":
+        dados["ps_cir_outro_justificativa"] = resposta
+        st.session_state.estado = "PS_CIR_OUTRO_Q6"
+        add_bot("👉 Essa negativa do plano foi por escrita ou verbal?")
+    elif estado == "PS_CIR_OUTRO_Q6":
+        dados["ps_cir_outro_escrita"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS ENDOMETRIOSE
+    elif estado == "PS_ENDO_Q1":
+        dados["ps_endo_q1"] = resposta
+        st.session_state.estado = "PS_ENDO_Q2"
+        add_bot(PS_ENDO_Q2)
+    elif estado == "PS_ENDO_Q2":
+        dados["ps_endo_q2"] = resposta
+        st.session_state.estado = "PS_ENDO_Q3"
+        add_bot(PS_ENDO_Q3)
+    elif estado == "PS_ENDO_Q3":
+        dados["ps_endo_q3"] = resposta
+        st.session_state.estado = "PS_ENDO_Q4"
+        add_bot(PS_ENDO_Q4)
+    elif estado == "PS_ENDO_Q4":
+        dados["ps_endo_q4"] = resposta
+        st.session_state.estado = "PS_ENDO_Q5"
+        add_bot(PS_ENDO_Q5)
+    elif estado == "PS_ENDO_Q5":
+        dados["ps_endo_q5"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS BARIÁTRICA
+    elif estado == "PS_BARI_Q1":
+        dados["ps_bari_q1"] = resposta
+        st.session_state.estado = "PS_BARI_Q2"
+        add_bot(PS_BARI_Q2)
+    elif estado == "PS_BARI_Q2":
+        dados["ps_bari_q2"] = resposta
+        st.session_state.estado = "PS_BARI_Q3"
+        add_bot(PS_BARI_Q3)
+    elif estado == "PS_BARI_Q3":
+        dados["ps_bari_q3"] = resposta
+        st.session_state.estado = "PS_BARI_Q4"
+        add_bot(PS_BARI_Q4)
+    elif estado == "PS_BARI_Q4":
+        dados["ps_bari_q4"] = resposta
+        st.session_state.estado = "PS_BARI_Q5"
+        add_bot(PS_BARI_Q5)
+    elif estado == "PS_BARI_Q5":
+        dados["ps_bari_q5"] = resposta
+        st.session_state.estado = "PS_BARI_Q6"
+        add_bot(PS_BARI_Q6)
+    elif estado == "PS_BARI_Q6":
+        dados["ps_bari_q6"] = resposta
+        st.session_state.estado = "PS_BARI_Q7"
+        add_bot(PS_BARI_Q7)
+    elif estado == "PS_BARI_Q7":
+        dados["ps_bari_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS ONCOLOGIA
+    elif estado == "PS_ONCO_Q1":
+        dados["ps_onco_q1"] = resposta
+        st.session_state.estado = "PS_ONCO_Q2"
+        add_bot(PS_ONCO_Q2)
+    elif estado == "PS_ONCO_Q2":
+        dados["ps_onco_q2"] = resposta
+        st.session_state.estado = "PS_ONCO_Q3"
+        add_bot(PS_ONCO_Q3)
+    elif estado == "PS_ONCO_Q3":
+        dados["ps_onco_q3"] = resposta
+        st.session_state.estado = "PS_ONCO_Q4"
+        add_bot(PS_ONCO_Q4)
+    elif estado == "PS_ONCO_Q4":
+        dados["ps_onco_q4"] = resposta
+        st.session_state.estado = "PS_ONCO_Q5"
+        add_bot(PS_ONCO_Q5)
+    elif estado == "PS_ONCO_Q5":
+        dados["ps_onco_q5"] = resposta
+        st.session_state.estado = "PS_ONCO_Q6"
+        add_bot(PS_ONCO_Q6)
+    elif estado == "PS_ONCO_Q6":
+        dados["ps_onco_q6"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS CARDIOLOGIA
+    elif estado == "PS_CARDIO_Q1":
+        dados["ps_cardio_q1"] = resposta
+        st.session_state.estado = "PS_CARDIO_Q2"
+        add_bot(PS_CARDIO_Q2)
+    elif estado == "PS_CARDIO_Q2":
+        dados["ps_cardio_q2"] = resposta
+        st.session_state.estado = "PS_CARDIO_Q3"
+        add_bot(PS_CARDIO_Q3)
+    elif estado == "PS_CARDIO_Q3":
+        dados["ps_cardio_q3"] = resposta
+        st.session_state.estado = "PS_CARDIO_Q4"
+        add_bot(PS_CARDIO_Q4)
+    elif estado == "PS_CARDIO_Q4":
+        dados["ps_cardio_q4"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS NEUROCIRURGIA
+    elif estado == "PS_NEURO_Q1":
+        dados["ps_neuro_q1"] = resposta
+        st.session_state.estado = "PS_NEURO_Q2"
+        add_bot(PS_NEURO_Q2)
+    elif estado == "PS_NEURO_Q2":
+        dados["ps_neuro_q2"] = resposta
+        st.session_state.estado = "PS_NEURO_Q3"
+        add_bot(PS_NEURO_Q3)
+    elif estado == "PS_NEURO_Q3":
+        dados["ps_neuro_q3"] = resposta
+        st.session_state.estado = "PS_NEURO_Q4"
+        add_bot(PS_NEURO_Q4)
+    elif estado == "PS_NEURO_Q4":
+        dados["ps_neuro_q4"] = resposta
+        st.session_state.estado = "PS_NEURO_Q5"
+        add_bot(PS_NEURO_Q5)
+    elif estado == "PS_NEURO_Q5":
+        dados["ps_neuro_q5"] = resposta
+        st.session_state.estado = "PS_NEURO_Q6"
+        add_bot(PS_NEURO_Q6)
+    elif estado == "PS_NEURO_Q6":
+        dados["ps_neuro_q6"] = resposta
+        st.session_state.estado = "PS_NEURO_Q7"
+        add_bot(PS_NEURO_Q7)
+    elif estado == "PS_NEURO_Q7":
+        dados["ps_neuro_q7"] = resposta
+        st.session_state.estado = "PS_NEURO_Q8"
+        add_bot(PS_NEURO_Q8)
+    elif estado == "PS_NEURO_Q8":
+        dados["ps_neuro_q8"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS ORTOPEDIA
+    elif estado == "PS_ORTO_Q1":
+        dados["ps_orto_q1"] = resposta
+        st.session_state.estado = "PS_ORTO_Q2"
+        add_bot(PS_ORTO_Q2)
+    elif estado == "PS_ORTO_Q2":
+        dados["ps_orto_q2"] = resposta
+        st.session_state.estado = "PS_ORTO_Q3"
+        add_bot(PS_ORTO_Q3)
+    elif estado == "PS_ORTO_Q3":
+        dados["ps_orto_q3"] = resposta
+        st.session_state.estado = "PS_ORTO_Q4"
+        add_bot(PS_ORTO_Q4)
+    elif estado == "PS_ORTO_Q4":
+        dados["ps_orto_q4"] = resposta
+        st.session_state.estado = "PS_ORTO_Q5"
+        add_bot(PS_ORTO_Q5)
+    elif estado == "PS_ORTO_Q5":
+        dados["ps_orto_q5"] = resposta
+        st.session_state.estado = "PS_ORTO_Q6"
+        add_bot(PS_ORTO_Q6)
+    elif estado == "PS_ORTO_Q6":
+        dados["ps_orto_q6"] = resposta
+        st.session_state.estado = "PS_ORTO_Q7"
+        add_bot(PS_ORTO_Q7)
+    elif estado == "PS_ORTO_Q7":
+        dados["ps_orto_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS OFTALMOLOGIA
+    elif estado == "PS_OFTAL_Q1":
+        dados["ps_oftal_q1"] = resposta
+        st.session_state.estado = "PS_OFTAL_Q2"
+        add_bot(PS_OFTAL_Q2)
+    elif estado == "PS_OFTAL_Q2":
+        dados["ps_oftal_q2"] = resposta
+        st.session_state.estado = "PS_OFTAL_Q3"
+        add_bot(PS_OFTAL_Q3)
+    elif estado == "PS_OFTAL_Q3":
+        dados["ps_oftal_q3"] = resposta
+        st.session_state.estado = "PS_OFTAL_Q4"
+        add_bot(PS_OFTAL_Q4)
+    elif estado == "PS_OFTAL_Q4":
+        dados["ps_oftal_q4"] = resposta
+        st.session_state.estado = "PS_OFTAL_Q5"
+        add_bot(PS_OFTAL_Q5)
+    elif estado == "PS_OFTAL_Q5":
+        dados["ps_oftal_q5"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS MEDICAMENTO
+    elif estado == "PS_MED_Q1":
+        dados["ps_med_q1"] = resposta
+        st.session_state.estado = "PS_MED_Q2"
+        add_bot(PS_MED_Q2)
+    elif estado == "PS_MED_Q2":
+        dados["ps_med_q2"] = resposta
+        st.session_state.estado = "PS_MED_Q3"
+        add_bot(PS_MED_Q3)
+    elif estado == "PS_MED_Q3":
+        dados["ps_med_q3"] = resposta
+        st.session_state.estado = "PS_MED_Q4"
+        add_bot(PS_MED_Q4)
+    elif estado == "PS_MED_Q4":
+        dados["ps_med_q4"] = resposta
+        st.session_state.estado = "PS_MED_Q5"
+        add_bot(PS_MED_Q5)
+    elif estado == "PS_MED_Q5":
+        dados["ps_med_q5"] = resposta
+        st.session_state.estado = "PS_MED_Q6"
+        add_bot(PS_MED_Q6)
+    elif estado == "PS_MED_Q6":
+        dados["ps_med_q6"] = resposta
+        st.session_state.estado = "PS_MED_Q7"
+        add_bot(PS_MED_Q7)
+    elif estado == "PS_MED_Q7":
+        dados["ps_med_q7"] = resposta
+        st.session_state.estado = "PS_MED_Q8"
+        add_bot(PS_MED_Q8)
+    elif estado == "PS_MED_Q8":
+        dados["ps_med_q8"] = resposta
+        st.session_state.estado = "PS_MED_Q9"
+        add_bot(PS_MED_Q9)
+    elif estado == "PS_MED_Q9":
+        dados["ps_med_q9"] = resposta
+        st.session_state.estado = "PS_MED_Q10"
+        add_bot(PS_MED_Q10)
+    elif estado == "PS_MED_Q10":
+        dados["ps_med_q10"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS EXAME
+    elif estado == "PS_EXAME_Q1":
+        dados["ps_exame_q1"] = resposta
+        st.session_state.estado = "PS_EXAME_Q2"
+        add_bot(PS_EXAME_Q2)
+    elif estado == "PS_EXAME_Q2":
+        dados["ps_exame_q2"] = resposta
+        st.session_state.estado = "PS_EXAME_Q3"
+        add_bot(PS_EXAME_Q3)
+    elif estado == "PS_EXAME_Q3":
+        dados["ps_exame_q3"] = resposta
+        st.session_state.estado = "PS_EXAME_Q4"
+        add_bot(PS_EXAME_Q4)
+    elif estado == "PS_EXAME_Q4":
+        dados["ps_exame_q4"] = resposta
+        st.session_state.estado = "PS_EXAME_Q5"
+        add_bot(PS_EXAME_Q5)
+    elif estado == "PS_EXAME_Q5":
+        dados["ps_exame_q5"] = resposta
+        st.session_state.estado = "PS_EXAME_Q6"
+        add_bot(PS_EXAME_Q6)
+    elif estado == "PS_EXAME_Q6":
+        dados["ps_exame_q6"] = resposta
+        st.session_state.estado = "PS_EXAME_Q7"
+        add_bot(PS_EXAME_Q7)
+    elif estado == "PS_EXAME_Q7":
+        dados["ps_exame_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS HOME CARE
+    elif estado == "PS_HOME_Q1":
+        dados["ps_home_q1"] = resposta
+        st.session_state.estado = "PS_HOME_Q2"
+        add_bot(PS_HOME_Q2)
+    elif estado == "PS_HOME_Q2":
+        dados["ps_home_q2"] = resposta
+        st.session_state.estado = "PS_HOME_Q3"
+        add_bot(PS_HOME_Q3)
+    elif estado == "PS_HOME_Q3":
+        dados["ps_home_q3"] = resposta
+        st.session_state.estado = "PS_HOME_Q4"
+        add_bot(PS_HOME_Q4)
+    elif estado == "PS_HOME_Q4":
+        dados["ps_home_q4"] = resposta
+        st.session_state.estado = "PS_HOME_Q5"
+        add_bot(PS_HOME_Q5)
+    elif estado == "PS_HOME_Q5":
+        dados["ps_home_q5"] = resposta
+        st.session_state.estado = "PS_HOME_Q6"
+        add_bot(PS_HOME_Q6)
+    elif estado == "PS_HOME_Q6":
+        dados["ps_home_q6"] = resposta
+        st.session_state.estado = "PS_HOME_Q7"
+        add_bot(PS_HOME_Q7)
+    elif estado == "PS_HOME_Q7":
+        dados["ps_home_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS TERAPIAS
+    elif estado == "PS_TERA_Q1":
+        dados["ps_tera_q1"] = resposta
+        st.session_state.estado = "PS_TERA_Q2"
+        add_bot(PS_TERA_Q2)
+    elif estado == "PS_TERA_Q2":
+        dados["ps_tera_q2"] = resposta
+        st.session_state.estado = "PS_TERA_Q3"
+        add_bot(PS_TERA_Q3)
+    elif estado == "PS_TERA_Q3":
+        dados["ps_tera_q3"] = resposta
+        st.session_state.estado = "PS_TERA_Q4"
+        add_bot(PS_TERA_Q4)
+    elif estado == "PS_TERA_Q4":
+        dados["ps_tera_q4"] = resposta
+        st.session_state.estado = "PS_TERA_Q5"
+        add_bot(PS_TERA_Q5)
+    elif estado == "PS_TERA_Q5":
+        dados["ps_tera_q5"] = resposta
+        st.session_state.estado = "PS_TERA_Q6"
+        add_bot(PS_TERA_Q6)
+    elif estado == "PS_TERA_Q6":
+        dados["ps_tera_q6"] = resposta
+        st.session_state.estado = "PS_TERA_Q7"
+        add_bot(PS_TERA_Q7)
+    elif estado == "PS_TERA_Q7":
+        dados["ps_tera_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS REAJUSTE
+    elif estado == "PS_REAJ_Q1":
+        dados["ps_reaj_q1"] = resposta
+        st.session_state.estado = "PS_REAJ_Q2"
+        add_bot(PS_REAJ_Q2)
+    elif estado == "PS_REAJ_Q2":
+        dados["ps_reaj_q2"] = resposta
+        st.session_state.estado = "PS_REAJ_Q3"
+        add_bot(PS_REAJ_Q3)
+    elif estado == "PS_REAJ_Q3":
+        dados["ps_reaj_q3"] = resposta
+        st.session_state.estado = "PS_REAJ_Q4"
+        add_bot(PS_REAJ_Q4)
+    elif estado == "PS_REAJ_Q4":
+        dados["ps_reaj_q4"] = resposta
+        st.session_state.estado = "PS_REAJ_Q5"
+        add_bot(PS_REAJ_Q5)
+    elif estado == "PS_REAJ_Q5":
+        dados["ps_reaj_q5"] = resposta
+        st.session_state.estado = "PS_REAJ_Q6"
+        add_bot(PS_REAJ_Q6)
+    elif estado == "PS_REAJ_Q6":
+        dados["ps_reaj_q6"] = resposta
+        st.session_state.estado = "PS_REAJ_Q7"
+        add_bot(PS_REAJ_Q7)
+    elif estado == "PS_REAJ_Q7":
+        dados["ps_reaj_q7"] = resposta
+        st.session_state.estado = "PS_REAJ_Q8"
+        add_bot(PS_REAJ_Q8)
+    elif estado == "PS_REAJ_Q8":
+        dados["ps_reaj_q8"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS COPARTICIPAÇÃO
+    elif estado == "PS_COPA_Q1":
+        dados["ps_copa_q1"] = resposta
+        st.session_state.estado = "PS_COPA_Q2"
+        add_bot(PS_COPA_Q2)
+    elif estado == "PS_COPA_Q2":
+        dados["ps_copa_q2"] = resposta
+        st.session_state.estado = "PS_COPA_Q3"
+        add_bot(PS_COPA_Q3)
+    elif estado == "PS_COPA_Q3":
+        dados["ps_copa_q3"] = resposta
+        st.session_state.estado = "PS_COPA_Q4"
+        add_bot(PS_COPA_Q4)
+    elif estado == "PS_COPA_Q4":
+        dados["ps_copa_q4"] = resposta
+        st.session_state.estado = "PS_COPA_Q5"
+        add_bot(PS_COPA_Q5)
+    elif estado == "PS_COPA_Q5":
+        dados["ps_copa_q5"] = resposta
+        st.session_state.estado = "PS_COPA_Q6"
+        add_bot(PS_COPA_Q6)
+    elif estado == "PS_COPA_Q6":
+        dados["ps_copa_q6"] = resposta
+        st.session_state.estado = "PS_COPA_Q7"
+        add_bot(PS_COPA_Q7)
+    elif estado == "PS_COPA_Q7":
+        dados["ps_copa_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS ERRO MÉDICO
+    elif estado == "PS_ERRO_Q1":
+        dados["ps_erro_q1"] = resposta
+        st.session_state.estado = "PS_ERRO_Q2"
+        add_bot(PS_ERRO_Q2)
+    elif estado == "PS_ERRO_Q2":
+        dados["ps_erro_q2"] = resposta
+        st.session_state.estado = "PS_ERRO_Q3"
+        add_bot(PS_ERRO_Q3)
+    elif estado == "PS_ERRO_Q3":
+        dados["ps_erro_q3"] = resposta
+        st.session_state.estado = "PS_ERRO_Q4"
+        add_bot(PS_ERRO_Q4)
+    elif estado == "PS_ERRO_Q4":
+        dados["ps_erro_q4"] = resposta
+        st.session_state.estado = "PS_ERRO_Q5"
+        add_bot(PS_ERRO_Q5)
+    elif estado == "PS_ERRO_Q5":
+        dados["ps_erro_q5"] = resposta
+        st.session_state.estado = "PS_ERRO_Q6"
+        add_bot(PS_ERRO_Q6)
+    elif estado == "PS_ERRO_Q6":
+        dados["ps_erro_q6"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS OUTRO
+    elif estado == "PS_OUTRO_Q1":
+        dados["ps_outro_q1"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q2"
+        add_bot(PS_OUTRO_Q2)
+    elif estado == "PS_OUTRO_Q2":
+        dados["ps_outro_q2"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q3"
+        add_bot(PS_OUTRO_Q3)
+    elif estado == "PS_OUTRO_Q3":
+        dados["ps_outro_q3"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q4"
+        add_bot(PS_OUTRO_Q4)
+    elif estado == "PS_OUTRO_Q4":
+        dados["ps_outro_q4"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q5"
+        add_bot(PS_OUTRO_Q5)
+    elif estado == "PS_OUTRO_Q5":
+        dados["ps_outro_q5"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q6"
+        add_bot(PS_OUTRO_Q6)
+    elif estado == "PS_OUTRO_Q6":
+        dados["ps_outro_q6"] = resposta
+        st.session_state.estado = "PS_OUTRO_Q7"
+        add_bot(PS_OUTRO_Q7)
+    elif estado == "PS_OUTRO_Q7":
+        dados["ps_outro_q7"] = resposta
+        st.session_state.estado = "PS_POS_PLANO"
+        add_bot(PS_POS_CORRIGIDA)
+
+    # PS_POS_PLANO
+    elif estado == "PS_POS_PLANO":
+        dados["ps_pos_escolha"] = resposta
+        if "1" in resposta:
+            st.session_state.estado = "PS_OP1_PERMISSAO"
+            add_bot(PS_OP1_PERMISSAO)
+        elif "2" in resposta:
+            add_bot(PS_OP2)
+            st.session_state.estado = "AGUARDANDO_CONFIRMACAO"
+        elif "3" in resposta:
+            st.session_state.estado = "PS_OP3_CORRIGIDA"
+            add_bot(PS_OP3_CORRIGIDA)
+        else:
+            add_bot(PS_POS_CORRIGIDA)
+
+    # PS_OP1_PERMISSAO
+    elif estado == "PS_OP1_PERMISSAO":
+        if _sim(resposta):
+            add_bot(PS_OP1_DETALHES)
+            st.session_state.estado = "AGUARDANDO_CONFIRMACAO"
+        else:
+            add_bot("Quando decidir, estou à disposição. Sucesso na sua jornada! 🙏")
+            st.session_state.estado = "FIM"
+
+    # PS_OP3_CORRIGIDA
+    elif estado == "PS_OP3_CORRIGIDA":
+        dados["ps_op3_entendeu"] = resposta
+        st.session_state.estado = "PS_OP3_PERMISSAO"
+        add_bot(PS_OP3_PERMISSAO)
+
+    # PS_OP3_PERMISSAO
+    elif estado == "PS_OP3_PERMISSAO":
+        if "acompanhamento" in _n(resposta) or "quero" in _n(resposta):
+            add_bot("Perfeito. O próximo passo agora é uma reunião rápida para a Dra Lethicia te explicar como funciona o processo e valores de honorários.\n\nAntes de agendarmos: além de você, tem mais alguém que participe das decisões familiares ou financeiras, como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?")
+            st.session_state.estado = "DECISAO_COMPARTILHADA"
+        else:
+            add_bot(PS_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+
+    # AGUARDANDO_CONFIRMACAO
+    elif estado == "AGUARDANDO_CONFIRMACAO":
+        if _sim(resposta):
+            add_bot(f"Perfeito! Agende sua reunião: {CALENDLY_LINK}")
+            st.session_state.link_enviado_em = datetime.now()
+            st.session_state.lembrete_enviado = False
+        else:
+            add_bot(PS_ENCERRAMENTO)
+        st.session_state.estado = "FIM"
+
+    # FIM
+    elif estado == "FIM":
+        pass
+
+    enviar_lembrete()
 
 # ============================================
 # INTERFACE STREAMLIT
@@ -718,17 +1484,48 @@ def render_botoes():
                 processar("Consultas")
                 st.rerun()
     
-    # ========== BOTÕES SUS ESPECIALIDADE CORRIGIDOS ==========
+    # BOTÕES SUS ESPECIALIDADE - CORRIGIDOS (SEM REPARADORA)
     elif estado == "SUS_ESPECIALIDADE":
         st.markdown("---")
         st.markdown("**🔘 Especialidades:**")
-        especialidades = ["Oncologia", "Neurodivergências (TEA, TDAH)", "Endometriose", "Medicamento", "Bariátrica", "Neurologia/Neurocirurgia", "Cardiologia", "Outros"]
-        cols = st.columns(3)
+        especialidades = [
+            "1️⃣ Oncologia", 
+            "2️⃣ Neurodivergências", 
+            "3️⃣ Endometriose", 
+            "4️⃣ Medicamento", 
+            "5️⃣ Bariátrica", 
+            "6️⃣ Neurologia", 
+            "7️⃣ Cardiologia", 
+            "8️⃣ Outros"
+        ]
+        cols = st.columns(4)
         for i, esp in enumerate(especialidades):
-            with cols[i % 3]:
-                if st.button(esp[:20], use_container_width=True):
-                    add_user(esp)
-                    processar(esp)
+            with cols[i % 4]:
+                if st.button(esp, use_container_width=True):
+                    if "1" in esp:
+                        add_user("Oncologia")
+                        processar("Oncologia")
+                    elif "2" in esp:
+                        add_user("Neurodivergências (TEA, TDAH)")
+                        processar("Neurodivergências (TEA, TDAH)")
+                    elif "3" in esp:
+                        add_user("Endometriose / Adenomiose")
+                        processar("Endometriose / Adenomiose")
+                    elif "4" in esp:
+                        add_user("Medicamento")
+                        processar("Medicamento")
+                    elif "5" in esp:
+                        add_user("Bariátrica")
+                        processar("Bariátrica")
+                    elif "6" in esp:
+                        add_user("Neurologia / Neurocirurgia")
+                        processar("Neurologia / Neurocirurgia")
+                    elif "7" in esp:
+                        add_user("Cardiologia")
+                        processar("Cardiologia")
+                    else:
+                        add_user("Outros")
+                        processar("Outros")
                     st.rerun()
     
     elif estado in ["PROPOSTA_JUDICIAL", "HONORARIOS", "AGUARDANDO_CONFIRMACAO", "PS_OP1_PERMISSAO"]:
