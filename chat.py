@@ -1,14 +1,15 @@
-iara_bot_v4.py
 """
-Iara Bot - Assistente Jurídica em Direito da Saúde
-VERSÃO FINAL V4 - COM DETECÇÃO DE PERGUNTAS SOBRE VALORES E FLUXOS COMPLETOS
+Iara Bot v4 - Assistente Jurídica em Direito da Saúde
+VERSÃO COMPLETA E FINAL - PRONTA PARA PRODUÇÃO
+Fluxos: SUS (Exames, Consultas, Especialidades), Planos de Saúde, Detecção de Valores
 """
 
 import streamlit as st
 from datetime import datetime
+import json
 
 # ============================================
-# CONFIGURAÇÕES
+# CONFIGURAÇÕES INICIAIS
 # ============================================
 CALENDLY_LINK = "https://calendly.com/dra-lethicia"
 L = "Dra. Lethicia Fernanda"
@@ -20,13 +21,14 @@ LINK_CARTAO_500 = "https://www.asaas.com/c/apigp8m45tileghw"
 LINK_PIX_500 = "https://www.asaas.com/c/x1dfvyoajxnlgpp2"
 
 st.set_page_config(
-    page_title="Iara Bot - Assistente Jurídica",
+    page_title="Iara Bot - Assistente Jurídica em Direito da Saúde",
     page_icon="⚖️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ============================================
-# CSS
+# CSS CUSTOMIZADO
 # ============================================
 st.markdown("""
 <style>
@@ -49,7 +51,7 @@ st.markdown("""
         margin-left: 20%;
     }
     .chat-container {
-        max-height: 550px;
+        max-height: 600px;
         overflow-y: auto;
         padding: 1rem;
         border: 1px solid #ddd;
@@ -60,6 +62,24 @@ st.markdown("""
         background-color: #2c7be5;
         color: white;
         border-radius: 20px;
+        font-weight: 600;
+    }
+    .stButton button:hover {
+        background-color: #1e40af;
+    }
+    .info-box {
+        background-color: #e0f2fe;
+        border-left: 4px solid #0284c7;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .success-box {
+        background-color: #dcfce7;
+        border-left: 4px solid #16a34a;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -69,12 +89,60 @@ st.markdown("""
 # ============================================
 
 def _n(r: str) -> str:
+    """Normaliza texto para comparação (minúsculas, sem espaços)"""
     return str(r).strip().lower()
 
 def _sim(r: str) -> bool:
-    return any(p in _n(r) for p in ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo", "acompanhamento", "ajuda"])
+    """Detecta respostas afirmativas"""
+    gatilhos_sim = ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo", "acompanhamento", "ajuda", "prosseguir", "avançar"]
+    return any(p in _n(r) for p in gatilhos_sim)
+
+def _nao(r: str) -> bool:
+    """Detecta respostas negativas"""
+    gatilhos_nao = ["não", "nao", "n", "no", "nunca", "recuso", "negativo"]
+    return any(p in _n(r) for p in gatilhos_nao)
+
+def detectar_pergunta_valor(texto: str) -> bool:
+    """Detecta perguntas sobre valores/custos"""
+    gatilhos = ["valor", "quanto custa", "quanto é", "preço", "honorários", "pagamento", "investimento", "custa", "custo", "valor do"]
+    return any(g in _n(texto) for g in gatilhos)
+
+def responder_valor(dados: dict) -> str:
+    """Retorna resposta contextualizada sobre valores"""
+    canal = dados.get("canal", "")
+    sus_tipo = dados.get("sus_tipo", "")
+    ps_busca = dados.get("ps_busca", "")
+    
+    # Cenário 1: Cirurgia, Oncologia, Medicamento (Alta Complexidade)
+    if "Cirurgia" in sus_tipo or "Oncologia" in sus_tipo or "Medicamento" in sus_tipo or "Bariátrica" in sus_tipo:
+        return (
+            "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada vida e cada urgência são únicas.\n\n"
+            "Como o seu caso envolve um cenário de alta complexidade técnica e risco direto à saúde, a Dra. Lethicia não define valores por mensagem de texto.\n\n"
+            "Para situações assim, é necessária uma **Reunião Estratégica por vídeo (15 minutos)**. Nessa reunião, ela vai te apresentar o plano de ação para cercar o juiz e garantir que seu direito não seja negado, além de alinhar o investimento necessário.\n\n"
+            f"Vamos agendar? {CALENDLY_LINK}"
+        )
+    
+    # Cenário 2: Consultas e Exames
+    elif "Consulta" in sus_tipo or "Exame" in sus_tipo or "Neurodivergências" in sus_tipo or "Endometriose" in sus_tipo:
+        return (
+            "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada caso exige um empenho técnico diferente.\n\n"
+            "Como o seu caso envolve a liberação de Consulta ou Exame, a Dra. Lethicia faz questão de analisar pessoalmente a documentação na mesa de trabalho antes de passar qualquer orçamento.\n\n"
+            "Valores para esse tipo de demanda são informados somente após essa triagem técnica, garantindo que o valor seja justo e condizente com a complexidade do seu pedido. Assim que ela analisar seus documentos, você receberá o retorno."
+        )
+    
+    # Cenário 3: Reajustes, Contratos (Plano de Saúde)
+    elif "Consultoria" in ps_busca or "Reajuste" in ps_busca or "Coparticipação" in ps_busca:
+        return (
+            "Compreendo sua dúvida sobre o investimento. No meu escritório, tratamos cada contrato de forma individualizada, pois os valores de reajuste e as cláusulas variam drasticamente entre as operadoras.\n\n"
+            "Como o seu caso envolve uma análise financeira e contratual detalhada, a Dra. Lethicia não define valores por mensagem de texto.\n\n"
+            "É necessário uma **Reunião Estratégica** (vídeo ou áudio) para que ela te explique como buscaremos o reequilíbrio do seu plano e a restituição de valores pagos indevidamente, alinhando o investimento da consultoria nessa etapa."
+        )
+    
+    else:
+        return "Compreendo sua dúvida sobre o investimento. Para te passar um valor justo, a Dra. Lethicia precisa entender melhor a complexidade do seu caso. Vamos continuar com as perguntas para que eu possa coletar os dados necessários?"
 
 def init_session():
+    """Inicializa variáveis de sessão"""
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "estado" not in st.session_state:
@@ -85,61 +153,26 @@ def init_session():
         st.session_state.nome = None
     if "pergunta_idx" not in st.session_state:
         st.session_state.pergunta_idx = 0
+    if "perguntas" not in st.session_state:
+        st.session_state.perguntas = []
 
-def add_bot(msg):
+def add_bot(msg: str):
+    """Adiciona mensagem do bot"""
     if msg:
         msg = msg.replace("{nome}", st.session_state.nome or "")
         msg = msg.replace("{lawyer}", L)
         msg = msg.replace("{CALENDLY_LINK}", CALENDLY_LINK)
         st.session_state.messages.append({"role": "bot", "content": msg})
 
-def add_user(msg):
+def add_user(msg: str):
+    """Adiciona mensagem do usuário"""
     st.session_state.messages.append({"role": "user", "content": msg})
 
 def reset():
+    """Reseta a conversa"""
     st.session_state.clear()
     init_session()
     add_bot(MSG_BOAS_VINDAS)
-
-# ============================================
-# LÓGICA DE DETECÇÃO DE VALORES
-# ============================================
-
-def detectar_pergunta_valor(texto):
-    gatilhos = ["valor", "quanto custa", "quanto é", "preço", "honorários", "pagamento", "investimento"]
-    return any(g in _n(texto) for g in gatilhos)
-
-def responder_valor():
-    dados = st.session_state.dados
-    canal = dados.get("canal", "")
-    tipo = dados.get("sus_tipo", "") or dados.get("ps_busca", "")
-    
-    # Cenário 1: Cirurgia, Medicamento de Alto Custo ou Home Care
-    if "Cirurgia" in tipo or "Medicamento" in tipo or "Oncologia" in tipo:
-        return (
-            "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada vida e cada urgência são únicas.\n\n"
-            "Como o seu caso envolve um cenário de alta complexidade técnica e risco direto à saúde, a Dra. Lethicia não define valores por mensagem de texto.\n\n"
-            "Para situações assim, é necessária uma **Reunião Estratégica por vídeo (15 minutos)**. Nessa reunião, ela vai te apresentar o plano de ação e alinhar o investimento necessário."
-        )
-    
-    # Cenário 2: Consultas e Exames
-    elif "Consulta" in tipo or "Exame" in tipo:
-        return (
-            "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada caso exige um empenho técnico diferente.\n\n"
-            "Como o seu caso envolve a liberação de Consulta ou Exame, a Dra. Lethicia faz questão de analisar pessoalmente a documentação antes de passar qualquer orçamento.\n\n"
-            "Valores para esse tipo de demanda são informados somente após essa triagem técnica."
-        )
-    
-    # Cenário 3: Reajustes, Contratos (Plano de Saúde)
-    elif "Consultoria" in tipo or "Reajuste" in tipo:
-        return (
-            "Compreendo sua dúvida sobre o investimento. No meu escritório, tratamos cada contrato de forma individualizada.\n\n"
-            "Como o seu caso envolve uma análise financeira e contratual detalhada, a Dra. Lethicia não define valores por mensagem de texto.\n\n"
-            "É necessário uma **Reunião Estratégica** para que ela te explique como buscaremos o reequilíbrio do seu plano, alinhando o investimento nessa etapa."
-        )
-    
-    else:
-        return "Compreendo sua dúvida sobre o investimento. Para te passar um valor justo, a Dra. Lethicia precisa entender melhor a complexidade do seu caso. Vamos continuar com as perguntas para que eu possa coletar os dados necessários?"
 
 # ============================================
 # MENSAGENS PRINCIPAIS
@@ -156,13 +189,13 @@ MSG_BOAS_VINDAS = (
 MSG_CANAL = "Olá, {nome}! Seu atendimento é pelo **SUS** ou por **Plano de Saúde**?"
 
 # ============================================
-# FLUXO SUS - MENSAGENS E PERGUNTAS
+# FLUXO SUS - MENSAGENS
 # ============================================
 
 MSG_SUS_DEMANDA = "Me diga o que você está aguardando?\n\n🔪 Cirurgia / Tratamento\n\n📋 Consultas / Exames"
 
-# --- SUS EXAMES ---
 MSG_SUS_EXAME_INICIO = "Entendi… vamos ver isso com calma 💙\n\n👉 Qual exame o médico solicitou pra você?"
+
 MSG_SUS_EXAME_FINALIDADE = (
     "Esse exame que você precisa é para qual finalidade principal?\n\n"
     "1️⃣ **Diagnóstico:** Para descobrir o que eu tenho.\n"
@@ -195,7 +228,6 @@ PERGUNTAS_EXAME_OP3 = [
     "👉 você recebeu algum comprovante do SUS? (Pode ser agendamento; protocolo; print do aplicativo meu SUS; posição na fila)"
 ]
 
-# --- SUS CONSULTAS ---
 MSG_SUS_CONSULTA_INICIO = (
     "Entendi que você está aguardando uma consulta especializada. "
     "Deixa eu te perguntar: você já está nessa fila de espera há mais de 30 dias ou o seu caso tem um prazo de urgência que o SUS simplesmente ignorou?"
@@ -209,11 +241,6 @@ PERGUNTAS_CONSULTA = [
     "Você teria algum exame informando a condição de saúde que tem?"
 ]
 
-MSG_SUS_CONSULTA_DOCS = (
-    "Para a Dra. Lethicia validar o seu protocolo de urgência, você possui o print do App Meu SUS Digital (ou o comprovante da fila de espera) e o Laudo Médico em mãos?"
-)
-
-# --- SUS ESPECIALIDADES ---
 MSG_SUS_ESPECIALIDADE_ESCOLHA = (
     "Para que eu direcione você para o protocolo de urgência correto, qual problema estamos enfrentando hoje?\n\n"
     "1️⃣ Oncologia\n2️⃣ Neurodivergências (TEA, TDAH)\n3️⃣ Endometriose / Adenomiose\n"
@@ -230,10 +257,9 @@ PERGUNTAS_SUS_ONCO = [
     "Você possui o comprovante de que está aguardando na fila? (Print do Meu SUS Digital, agendamento ou papel do SISREG)."
 ]
 
-# MENSAGEM REESTRUTURADA DE NEURODIVERGÊNCIAS
 MSG_NEURO_REESTRUTURADA = (
     "Entendo as batalhas diárias que você enfrenta para garantir o melhor para quem você ama. "
-    "Seja você ou seu filho(a) deve ter seu desenvolvimento barrado por limites impostos pelo **SUS**. "
+    "Seja você ou seu filho(a) não deve ter seu desenvolvimento barrado por limites impostos pelo **SUS**. "
     "Estou aqui para lutar ao seu lado e garantir todas as terapias que são de direito. "
     "Agora me conta uma coisa importante: 👉 Quais terapias o médico indicou? (ABA, Psico, fisioterapia...)"
 )
@@ -297,7 +323,6 @@ PERGUNTAS_SUS_OUTROS = [
     "Você possui o comprovante de que está aguardando na fila?"
 ]
 
-# --- SUS PÓS-PERGUNTAS ---
 MSG_SUS_RISCO_SAUDE = (
     "{nome}, recebi suas respostas aqui. O que mais me preocupa no seu caso é que o SUS trata essa necessidade como se pudesse esperar, "
     "mas juridicamente sabemos que o tempo é o seu maior inimigo agora.\n\n"
@@ -376,10 +401,6 @@ PS_NEGATIVA_JUDICIAL = (
     "como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
 )
 
-# ============================================
-# MENSAGENS DE DECISÃO (COMUM)
-# ============================================
-
 DECISAO_SIM_MSG = (
     "Excelente! É fundamental que ele(a) participe, pois como o Direito à Saúde envolve prazos muito curtos e decisões imediatas, "
     "é bom que todos estejam na mesma página.\n\n"
@@ -402,13 +423,14 @@ DECISAO_REPASSE_MSG = (
 # LÓGICA DE PROCESSAMENTO
 # ============================================
 
-def processar(resposta):
+def processar(resposta: str):
+    """Processa a resposta do usuário e avança o fluxo"""
     estado = st.session_state.estado
     dados = st.session_state.dados
 
-    # Detecção de pergunta sobre valores
+    # Detecção de pergunta sobre valores (SEMPRE VERIFICAR PRIMEIRO)
     if detectar_pergunta_valor(resposta):
-        add_bot(responder_valor())
+        add_bot(responder_valor(dados))
         return
 
     # --- INÍCIO ---
@@ -566,10 +588,10 @@ def processar(resposta):
 
     elif estado == "PS_PAGAMENTO_METODO_97":
         if "cartão" in _n(resposta):
-            add_bot(f"Aqui está o link para pagamento via Cartão de Crédito: {LINK_CARTAO_97}")
+            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
         elif "pix" in _n(resposta):
-            add_bot(f"Aqui está o link para pagamento via Pix: {LINK_PIX_97}")
+            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
 
     elif estado == "PS_OP4":
@@ -582,10 +604,10 @@ def processar(resposta):
 
     elif estado == "PS_PAGAMENTO_METODO_500":
         if "cartão" in _n(resposta):
-            add_bot(f"Aqui está o link para pagamento via Cartão de Crédito: {LINK_CARTAO_500}")
+            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_500}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
         elif "pix" in _n(resposta):
-            add_bot(f"Aqui está o link para pagamento via Pix: {LINK_PIX_500}")
+            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_500}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
 
     # --- DECISÃO E AGENDAMENTO ---
@@ -593,7 +615,7 @@ def processar(resposta):
         if "conjuge" in _n(resposta) or "sim" in _n(resposta):
             add_bot(DECISAO_SIM_MSG)
             st.session_state.estado = "FIM"
-        elif "sozinho" in _n(resposta) or "não" in _n(resposta):
+        elif "sozinho" in _n(resposta) or "não" in _n(resposta) or _nao(resposta):
             add_bot(DECISAO_NAO_MSG)
             st.session_state.estado = "FIM"
         elif "repasso" in _n(resposta) or "tem" in _n(resposta):
@@ -608,188 +630,212 @@ def processar(resposta):
 # INTERFACE STREAMLIT
 # ============================================
 
-def render_sidebar():
+def main():
+    st.title("⚖️ Iara Bot - Assistente Jurídica em Direito da Saúde")
+    st.caption(f"Especialista: {L} | Atendimento: SUS, Planos de Saúde e INSS")
+
+    init_session()
+
+    # Sidebar
     with st.sidebar:
-        st.markdown(f"## ⚖️ {L}")
-        st.markdown("*Especialista em Direito da Saúde*")
-        st.markdown("---")
+        st.markdown("### 📋 Informações da Sessão")
         if st.session_state.nome:
-            st.markdown(f"**Cliente:** {st.session_state.nome}")
+            st.info(f"**Cliente:** {st.session_state.nome}")
+        if st.session_state.dados.get("canal"):
+            st.info(f"**Canal:** {st.session_state.dados['canal']}")
+        if st.session_state.dados.get("sus_tipo"):
+            st.info(f"**Tipo:** {st.session_state.dados['sus_tipo']}")
+
+        st.markdown("---")
         if st.button("🔄 Nova Conversa", use_container_width=True):
             reset()
             st.rerun()
 
-def render_chat():
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    for msg in st.session_state.messages:
-        if msg["role"] == "bot":
-            st.markdown(f'<div class="chat-message bot-message"><strong>🤖 Lara:</strong><br>{msg["content"]}</div>', unsafe_allow_html=True)
-        else:
-            nome = st.session_state.nome or "Você"
-            st.markdown(f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{msg["content"]}</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("### 📝 Sobre Iara Bot")
+        st.markdown(
+            "Assistente jurídico inteligente especializado em Direito da Saúde. "
+            "Qualifica automaticamente casos de SUS, Planos de Saúde e INSS."
+        )
 
-def render_botoes():
-    estado = st.session_state.estado
-    
-    if estado == "CANAL":
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🏥 SUS", use_container_width=True):
-                add_user("SUS")
-                processar("SUS")
-                st.rerun()
-        with col2:
-            if st.button("📋 Plano de Saúde", use_container_width=True):
-                add_user("Plano de Saúde")
-                processar("Plano de Saúde")
-                st.rerun()
-    
-    elif estado == "SUS_DEMANDA":
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔪 Cirurgia / Tratamento", use_container_width=True):
-                add_user("Cirurgia")
-                processar("Cirurgia")
-                st.rerun()
-        with col2:
-            if st.button("📋 Consultas / Exames", use_container_width=True):
-                add_user("Consultas")
-                processar("Consultas")
-                st.rerun()
-
-    elif estado == "SUS_EXAME_OU_CONSULTA":
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔬 Exame", use_container_width=True):
-                add_user("Exame")
-                processar("Exame")
-                st.rerun()
-        with col2:
-            if st.button("👨‍⚕️ Consulta", use_container_width=True):
-                add_user("Consulta")
-                processar("Consulta")
-                st.rerun()
-
-    elif estado == "SUS_EXAME_FINALIDADE":
-        if st.button("1. Diagnóstico", use_container_width=True):
-            add_user("Diagnóstico")
-            processar("1")
-            st.rerun()
-        if st.button("2. Pré-operatório", use_container_width=True):
-            add_user("Pré-operatório")
-            processar("2")
-            st.rerun()
-        if st.button("3. Confirmação", use_container_width=True):
-            add_user("Confirmação")
-            processar("3")
-            st.rerun()
-
-    elif estado == "SUS_ESPECIALIDADE":
-        especialidades = ["Oncologia", "Neurodivergências", "Endometriose", "Medicamento", "Bariátrica", "Cardiologia", "Outros"]
-        cols = st.columns(2)
-        for i, esp in enumerate(especialidades):
-            with cols[i % 2]:
-                if st.button(esp, use_container_width=True):
-                    add_user(esp)
-                    processar(str(i+1))
-                    st.rerun()
-
-    elif estado == "SUS_PITCH":
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("⚖️ Quero ajuda da Dra. Lethicia", use_container_width=True):
-                add_user("Quero ajuda")
-                processar("ajuda")
-                st.rerun()
-        with col2:
-            if st.button("⏳ Quero aguardar", use_container_width=True):
-                add_user("Quero aguardar")
-                processar("aguardar")
-                st.rerun()
-
-    elif estado in ["PS_OP1", "PS_OP1_PAG", "PS_OP4", "SUS_HONORARIOS"]:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("✅ SIM", use_container_width=True):
-                add_user("SIM")
-                processar("SIM")
-                st.rerun()
-        with col2:
-            if st.button("❌ NÃO", use_container_width=True):
-                add_user("NÃO")
-                processar("NÃO")
-                st.rerun()
-
-    elif estado == "PS_BUSCA":
-        options = ["1. Dúvida Cobertura", "2. Já tenho Negativa", "3. Vou ter Negativa", "4. Consultoria Técnica"]
-        cols = st.columns(2)
-        for i, opt in enumerate(options):
-            with cols[i % 2]:
-                if st.button(opt, use_container_width=True):
-                    add_user(opt)
-                    processar(str(i+1))
-                    st.rerun()
-
-    elif estado in ["PS_PAGAMENTO_METODO_97", "PS_PAGAMENTO_METODO_500"]:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("💳 Cartão de Crédito", use_container_width=True):
-                add_user("Cartão de Crédito")
-                processar("cartão")
-                st.rerun()
-        with col2:
-            if st.button("📱 Pix", use_container_width=True):
-                add_user("Pix")
-                processar("pix")
-                st.rerun()
-
-    elif estado == "DECISAO_PERGUNTA":
-        if st.button("👨‍👩‍👧 Juntos (cônjuge/familiar)", use_container_width=True):
-            add_user("Sim, meu cônjuge/familiar participa")
-            processar("conjuge")
-            st.rerun()
-        if st.button("👤 Sozinho(a)", use_container_width=True):
-            add_user("Não, eu decido tudo sozinho(a)")
-            processar("sozinho")
-            st.rerun()
-        if st.button("📞 Tenho cônjuge, mas pode falar comigo", use_container_width=True):
-            add_user("Tem meu cônjuge, mas pode falar comigo")
-            processar("repasso")
-            st.rerun()
-
-    elif estado == "DECISAO_REPASSE":
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("👥 Com ele(a)", use_container_width=True):
-                add_user("Com ele(a)")
-                processar("com ele")
-                st.rerun()
-        with col2:
-            if st.button("👤 Entre nós", use_container_width=True):
-                add_user("Entre nós")
-                processar("entre nós")
-                st.rerun()
-
-def main():
-    st.title("⚖️ Lara Bot - Assistente Jurídica")
-    init_session()
-    
+    # Chat Container
     col1, col2 = st.columns([3, 1])
-    with col1:
-        render_chat()
-        render_botoes()
-        if st.session_state.estado != "FIM":
-            user_input = st.text_input("Digite sua mensagem:", key="input_text")
-            if st.button("Enviar"):
-                add_user(user_input)
-                processar(user_input)
-                st.rerun()
-        else:
-            st.info("Atendimento finalizado.")
-    with col2:
-        render_sidebar()
 
+    with col1:
+        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+        for msg in st.session_state.messages:
+            if msg["role"] == "bot":
+                st.markdown(
+                    f'<div class="chat-message bot-message"><strong>🤖 Lara:</strong><br>{msg["content"]}</div>',
+                    unsafe_allow_html=True
+                )
+            else:
+                nome = st.session_state.nome or "Você"
+                st.markdown(
+                    f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{msg["content"]}</div>',
+                    unsafe_allow_html=True
+                )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Botões contextuais
+        estado = st.session_state.estado
+
+        if estado == "CANAL":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("🏥 SUS", use_container_width=True):
+                    add_user("SUS")
+                    processar("SUS")
+                    st.rerun()
+            with col_b:
+                if st.button("📋 Plano de Saúde", use_container_width=True):
+                    add_user("Plano de Saúde")
+                    processar("Plano de Saúde")
+                    st.rerun()
+
+        elif estado == "SUS_DEMANDA":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("🔪 Cirurgia / Tratamento", use_container_width=True):
+                    add_user("Cirurgia")
+                    processar("Cirurgia")
+                    st.rerun()
+            with col_b:
+                if st.button("📋 Consultas / Exames", use_container_width=True):
+                    add_user("Consultas")
+                    processar("Consultas")
+                    st.rerun()
+
+        elif estado == "SUS_EXAME_OU_CONSULTA":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("🔬 Exame", use_container_width=True):
+                    add_user("Exame")
+                    processar("Exame")
+                    st.rerun()
+            with col_b:
+                if st.button("👨‍⚕️ Consulta", use_container_width=True):
+                    add_user("Consulta")
+                    processar("Consulta")
+                    st.rerun()
+
+        elif estado == "SUS_EXAME_FINALIDADE":
+            if st.button("1️⃣ Diagnóstico", use_container_width=True):
+                add_user("Diagnóstico")
+                processar("1")
+                st.rerun()
+            if st.button("2️⃣ Pré-operatório", use_container_width=True):
+                add_user("Pré-operatório")
+                processar("2")
+                st.rerun()
+            if st.button("3️⃣ Confirmação", use_container_width=True):
+                add_user("Confirmação")
+                processar("3")
+                st.rerun()
+
+        elif estado == "SUS_ESPECIALIDADE":
+            especialidades = ["Oncologia", "Neurodivergências", "Endometriose", "Medicamento", "Bariátrica", "Cardiologia", "Outros"]
+            cols = st.columns(2)
+            for i, esp in enumerate(especialidades):
+                with cols[i % 2]:
+                    if st.button(esp, use_container_width=True):
+                        add_user(esp)
+                        processar(str(i+1))
+                        st.rerun()
+
+        elif estado == "SUS_PITCH":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("⚖️ Quero ajuda da Dra. Lethicia", use_container_width=True):
+                    add_user("Quero ajuda")
+                    processar("ajuda")
+                    st.rerun()
+            with col_b:
+                if st.button("⏳ Quero aguardar", use_container_width=True):
+                    add_user("Quero aguardar")
+                    processar("aguardar")
+                    st.rerun()
+
+        elif estado in ["PS_OP1", "PS_OP1_PAG", "PS_OP4", "SUS_HONORARIOS"]:
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("✅ SIM", use_container_width=True):
+                    add_user("SIM")
+                    processar("SIM")
+                    st.rerun()
+            with col_b:
+                if st.button("❌ NÃO", use_container_width=True):
+                    add_user("NÃO")
+                    processar("NÃO")
+                    st.rerun()
+
+        elif estado == "PS_BUSCA":
+            options = ["1️⃣ Dúvida Cobertura", "2️⃣ Já tenho Negativa", "3️⃣ Vou ter Negativa", "4️⃣ Consultoria Técnica"]
+            cols = st.columns(2)
+            for i, opt in enumerate(options):
+                with cols[i % 2]:
+                    if st.button(opt, use_container_width=True):
+                        add_user(opt)
+                        processar(str(i+1))
+                        st.rerun()
+
+        elif estado in ["PS_PAGAMENTO_METODO_97", "PS_PAGAMENTO_METODO_500"]:
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("💳 Cartão de Crédito", use_container_width=True):
+                    add_user("Cartão de Crédito")
+                    processar("cartão")
+                    st.rerun()
+            with col_b:
+                if st.button("📱 Pix", use_container_width=True):
+                    add_user("Pix")
+                    processar("pix")
+                    st.rerun()
+
+        elif estado == "DECISAO_PERGUNTA":
+            if st.button("👨‍👩‍👧 Juntos (cônjuge/familiar)", use_container_width=True):
+                add_user("Sim, meu cônjuge/familiar participa")
+                processar("conjuge")
+                st.rerun()
+            if st.button("👤 Sozinho(a)", use_container_width=True):
+                add_user("Não, eu decido tudo sozinho(a)")
+                processar("sozinho")
+                st.rerun()
+            if st.button("📞 Tenho cônjuge, mas pode falar comigo", use_container_width=True):
+                add_user("Tem meu cônjuge, mas pode falar comigo")
+                processar("repasso")
+                st.rerun()
+
+        elif estado == "DECISAO_REPASSE":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("👥 Com ele(a)", use_container_width=True):
+                    add_user("Com ele(a)")
+                    processar("com ele")
+                    st.rerun()
+            with col_b:
+                if st.button("👤 Entre nós", use_container_width=True):
+                    add_user("Entre nós")
+                    processar("entre nós")
+                    st.rerun()
+
+        # Input de texto
+        if estado != "FIM":
+            st.markdown("---")
+            col_input, col_send = st.columns([4, 1])
+            with col_input:
+                user_input = st.text_input("Digite sua mensagem:", key="user_input", placeholder="Digite aqui sua resposta...")
+            with col_send:
+                if st.button("📤 Enviar", use_container_width=True):
+                    if user_input:
+                        add_user(user_input)
+                        processar(user_input)
+                        st.rerun()
+        else:
+            st.markdown("---")
+            st.success("✅ Atendimento finalizado! Clique em 'Nova Conversa' para começar novamente.")
+
+    # Inicializar chat se vazio
     if not st.session_state.messages:
         add_bot(MSG_BOAS_VINDAS)
         st.rerun()
