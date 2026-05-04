@@ -1,6 +1,6 @@
 """
 Iara Bot v4 - Assistente Jurídica em Direito da Saúde
-VERSÃO COMPLETA E FINAL - PRONTA PARA PRODUÇÃO
+VERSÃO 2 - FLUXO PLANO DE SAÚDE CORRIGIDO
 Fluxos: SUS (Exames, Consultas, Especialidades), Planos de Saúde, Detecção de Valores
 """
 
@@ -291,7 +291,7 @@ PERGUNTAS_SUS_MED = [
     "Perfeito, obrigado por me explicar 🙏.\n\n👉 Você tem a receita ou relatório médico desse medicamento?",
     "Entendo a frustração de ter um direito negado justamente quando você mais precisa de suporte... Ao te passar esse medicamento o seu médico escreveu no laudo que este remédio específico é o único que pode tratar seu caso agora e que a interrupção trará riscos à sua vida ou saúde?",
     "Essa parte é bem importante:\n\n👉 Você já utilizou outros medicamentos antes? Se sim, eles não tiveram resultado ou causaram algum problema?",
-    "👉 Você chegou a solicitar esse medicamento pelo SUS ou farmácia de alto custo? O que te informaram? (Negado, em análise, falta de estoque...)",
+    "👉 Você já chegou a solicitar esse medicamento pelo SUS ou farmácia de alto custo? O que te informaram? (Negado, em análise, falta de estoque...)",
     "👉 O médico comentou o que pode acontecer se você não usar esse medicamento?"
 ]
 
@@ -348,46 +348,56 @@ MSG_SUS_ENCERRAMENTO = (
 )
 
 # ============================================
-# FLUXO PLANO DE SAÚDE - MENSAGENS
+# FLUXO PLANO DE SAÚDE - MENSAGENS (CORRIGIDAS)
 # ============================================
 
 PS_BUSCA = (
     "Obrigado por todas as informações. Já consigo ter um bom entendimento da sua situação.\n\n"
     "Agora me diz: o que você está buscando nesse momento? Escolha a opção que mais se encaixa com onde você está agora:\n\n"
-    "1️⃣ **Dúvida sobre cobertura:** Quero entender se o plano de saúde é obrigado a cobrir determinado tratamento ou tenho uma dúvida específica.\n\n"
-    "2️⃣ **Já tenho a negativa:** Desejo orientação especializada para ingressar com a ação judicial.\n\n"
-    "3️⃣ **Ainda não tenho a negativa, mas preciso me preparar:** Quero me antecipar para aumentar minhas chances de aprovação.\n\n"
-    "4️⃣ **Consultoria Jurídica:** Análise técnica sobre reajustes, carência, portabilidade ou cobertura ANS."
+    "1️⃣ **Quero entender se o plano de saúde é obrigado a cobrir determinado tratamento** ou Tenho uma dúvida específica ou um caso diferente e gostaria de orientação jurídica para entender quais são meus direitos e possibilidades.\n\n"
+    "2️⃣ **Já tenho a negativa do plano:** Desejo orientação especializada para ingressar com a ação judicial e buscar a liberação do meu tratamento.\n\n"
+    "3️⃣ **Ainda não tenho a negativa, mas preciso me preparar:** Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
+    "4️⃣ **Preciso de uma consultoria jurídica:** Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória pela ANS."
 )
 
 PS_OP1_MSG = (
     "Perfeito! Para esse tipo de dúvida pontual, oferecemos o **Atendimento Expresso**. "
-    "Diferente da consultoria completa, aqui você envia sua dúvida e um especialista te responde de forma técnica e direta. "
-    "Isso te ajudaria?"
+    "Diferente da consultoria completa, aqui você envia sua dúvida e um especialista te responde de forma técnica e direta, "
+    "analisando se o seu direito é garantido por lei. Isso te ajudaria?"
 )
 
 PS_OP1_INVESTIMENTO = (
     "O investimento no atendimento particular é de **R$ 97,00** e é feito online.\n\n"
-    "É um atendimento individual e aprofundado onde você terá:\n"
-    "• **Resposta Técnica Direta:** Esclarecimento sobre a obrigatoriedade de cobertura.\n"
-    "• **Análise de Viabilidade:** Opinião profissional sobre chances de sucesso.\n"
-    "• **Indicação de Documentos:** Lista do que você precisa providenciar.\n\n"
+    "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
+    "• **Resposta Técnica Direta:** Esclarecimento sobre a obrigatoriedade de cobertura (Rol da ANS e entendimentos judiciais recentes).\n"
+    "• **Análise de Viabilidade:** Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n"
+    "• **Indicação de Documentos:** Lista do que você precisa providenciar imediatamente para não perder seus direitos.\n\n"
     "Podemos marcar um horário pra você na agenda da Dra Lethicia?"
+)
+
+PS_OP1_PAGAMENTO = (
+    "Perfeito! Vamos reservar o seu horário.\n\n"
+    "**Passo 1:** Escolha o melhor dia e hora no link abaixo:\n"
+    f"{CALENDLY_LINK}\n\n"
+    "**Passo 2:** Após escolher o horário, realize o pagamento da consultoria. "
+    "Você vai realizar o pagamento via **Pix** ou **Cartão de Crédito**?"
 )
 
 PS_OP4_MSG = (
     "Entendido. Para casos de análise contratual, reajustes ou dúvidas preventivas, realizamos uma **Consultoria Jurídica Especializada**.\n\n"
-    "Nesta reunião online um advogado especialista analisará detalhadamente o seu caso.\n\n"
+    "Nesta reunião online um advogado especialista em Direito da Saúde analisará detalhadamente o seu caso, documentos e contratos "
+    "para te entregar um parecer seguro sobre os seus direitos.\n\n"
     "**Informações sobre a Consultoria:**\n"
-    "• Investimento: R$ 500,00\n"
-    "• Duração: Até 1 hora\n"
-    "• Objetivo: Diagnóstico completo e estratégia personalizada.\n\n"
+    "• **Investimento:** R$ 500,00 (referente à análise técnica e reserva de horário).\n"
+    "• **Duração:** Até 1 hora.\n"
+    "• **Objetivo:** Diagnóstico completo e estratégia jurídica personalizada.\n\n"
     "Deseja prosseguir com o agendamento?"
 )
 
-PS_PAGAMENTO_INSTRUCOES = (
+PS_OP4_PAGAMENTO = (
     "Perfeito! Vamos reservar o seu horário.\n\n"
-    "**Passo 1:** Escolha o melhor dia e hora no link abaixo:\n{CALENDLY_LINK}\n\n"
+    "**Passo 1:** Escolha o melhor dia e hora no link abaixo:\n"
+    f"{CALENDLY_LINK}\n\n"
     "**Passo 2:** Após escolher o horário, realize o pagamento da consultoria. "
     "Você vai realizar o pagamento via **Pix** ou **Cartão de Crédito**?"
 )
@@ -402,21 +412,34 @@ PS_NEGATIVA_JUDICIAL = (
 )
 
 DECISAO_SIM_MSG = (
-    "Excelente! É fundamental que ele(a) participe, pois como o Direito à Saúde envolve prazos muito curtos e decisões imediatas, "
-    "é bom que todos estejam na mesma página.\n\n"
-    "Vamos escolher um horário que fique confortável para vocês dois... Logo abaixo vou te mandar a agenda da Dra Lethicia:\n{CALENDLY_LINK}"
+    "Excelente! É fundamental que ele(a) participe, pois como o Direito à Saúde envolve prazos muito curtos e decisões imediatas "
+    "sobre o tratamento, é bom que todos estejam na mesma página.\n\n"
+    "Vamos escolher um horário que fique confortável para vocês dois... Logo abaixo vou te mandar a agenda da Dra Lethicia:\n\n"
+    f"{CALENDLY_LINK}"
 )
 
 DECISAO_NAO_MSG = (
     "Perfeito, facilita bastante o nosso fluxo. Como você é a única responsável pela decisão, "
-    "conseguimos dar um andamento mais ágil aos trabalhos...\n\n"
-    "Logo abaixo vou te mandar a agenda da Dra Lethicia:\n{CALENDLY_LINK}"
+    "conseguimos dar um andamento mais ágil aos trabalhos... Logo abaixo vou te mandar a agenda da Dra Lethicia:\n\n"
+    f"{CALENDLY_LINK}"
 )
 
 DECISAO_REPASSE_MSG = (
     "Entendo! Olha, eu sugiro fortemente que ele tente participar, nem que seja apenas nos primeiros 10 minutos. "
-    "No Direito à Saúde, os detalhes técnicos costumam gerar muitas dúvidas e, se ele ouvir direto de mim, vocês ganham muito mais segurança.\n\n"
+    "No Direito à Saúde, os detalhes técnicos sobre a negativa da operadora costumam gerar muitas dúvidas e, "
+    "se ele ouvir direto de mim, vocês ganham muito mais segurança para decidir rápido.\n\n"
     "Conseguimos um horário em que ele possa entrar na chamada, ou prefere manter só entre nós por enquanto?"
+)
+
+DECISAO_REPASSE_COM = (
+    f"Logo abaixo vou te mandar a agenda da Dra Lethicia, e você marque o dia e horário que fica melhor pra você:\n\n{CALENDLY_LINK}"
+)
+
+MSG_ENCERRAMENTO_NAO = (
+    "Entendo perfeitamente e respeito sua decisão.\n\n"
+    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com liminares em andamento. "
+    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
+    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
 )
 
 # ============================================
@@ -555,11 +578,11 @@ def processar(resposta: str):
             add_bot(MSG_SUS_ENCERRAMENTO)
             st.session_state.estado = "FIM"
 
-    # --- FLUXO PLANO DE SAÚDE ---
+    # --- FLUXO PLANO DE SAÚDE (CORRIGIDO) ---
     elif estado == "PS_BUSCA":
         if "1" in resposta:
             dados["ps_busca"] = "Dúvida Cobertura"
-            st.session_state.estado = "PS_OP1"
+            st.session_state.estado = "PS_OP1_PERGUNTA"
             add_bot(PS_OP1_MSG)
         elif "2" in resposta or "3" in resposta:
             dados["ps_busca"] = "Negativa Judicial"
@@ -567,26 +590,26 @@ def processar(resposta: str):
             add_bot(PS_NEGATIVA_JUDICIAL)
         elif "4" in resposta:
             dados["ps_busca"] = "Consultoria Técnica"
-            st.session_state.estado = "PS_OP4"
+            st.session_state.estado = "PS_OP4_PERGUNTA"
             add_bot(PS_OP4_MSG)
 
-    elif estado == "PS_OP1":
+    elif estado == "PS_OP1_PERGUNTA":
         if _sim(resposta):
-            st.session_state.estado = "PS_OP1_PAG"
+            st.session_state.estado = "PS_OP1_INVESTIMENTO_MSG"
             add_bot(PS_OP1_INVESTIMENTO)
         else:
-            add_bot("Entendo perfeitamente e respeito sua decisão. Atendimento encerrado.")
+            add_bot(MSG_ENCERRAMENTO_NAO)
             st.session_state.estado = "FIM"
 
-    elif estado == "PS_OP1_PAG":
+    elif estado == "PS_OP1_INVESTIMENTO_MSG":
         if _sim(resposta):
-            st.session_state.estado = "PS_PAGAMENTO_METODO_97"
-            add_bot(PS_PAGAMENTO_INSTRUCOES)
+            st.session_state.estado = "PS_OP1_PAGAMENTO_METODO"
+            add_bot(PS_OP1_PAGAMENTO)
         else:
-            add_bot("Entendo perfeitamente e respeito sua decisão. Atendimento encerrado.")
+            add_bot(MSG_ENCERRAMENTO_NAO)
             st.session_state.estado = "FIM"
 
-    elif estado == "PS_PAGAMENTO_METODO_97":
+    elif estado == "PS_OP1_PAGAMENTO_METODO":
         if "cartão" in _n(resposta):
             add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
@@ -594,15 +617,15 @@ def processar(resposta: str):
             add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
 
-    elif estado == "PS_OP4":
+    elif estado == "PS_OP4_PERGUNTA":
         if _sim(resposta):
-            st.session_state.estado = "PS_PAGAMENTO_METODO_500"
-            add_bot(PS_PAGAMENTO_INSTRUCOES)
+            st.session_state.estado = "PS_OP4_PAGAMENTO_METODO"
+            add_bot(PS_OP4_PAGAMENTO)
         else:
-            add_bot("Entendo perfeitamente e respeito sua decisão. Atendimento encerrado.")
+            add_bot(MSG_ENCERRAMENTO_NAO)
             st.session_state.estado = "FIM"
 
-    elif estado == "PS_PAGAMENTO_METODO_500":
+    elif estado == "PS_OP4_PAGAMENTO_METODO":
         if "cartão" in _n(resposta):
             add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_500}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
             st.session_state.estado = "FIM"
@@ -613,18 +636,18 @@ def processar(resposta: str):
     # --- DECISÃO E AGENDAMENTO ---
     elif estado == "DECISAO_PERGUNTA":
         if "conjuge" in _n(resposta) or "sim" in _n(resposta):
+            st.session_state.estado = "FIM"
             add_bot(DECISAO_SIM_MSG)
+        elif "sozinho" in _n(resposta) or _nao(resposta):
             st.session_state.estado = "FIM"
-        elif "sozinho" in _n(resposta) or "não" in _n(resposta) or _nao(resposta):
             add_bot(DECISAO_NAO_MSG)
-            st.session_state.estado = "FIM"
         elif "repasso" in _n(resposta) or "tem" in _n(resposta):
             st.session_state.estado = "DECISAO_REPASSE"
             add_bot(DECISAO_REPASSE_MSG)
 
     elif estado == "DECISAO_REPASSE":
-        add_bot(f"Logo abaixo vou te mandar a agenda da Dra Lethicia, e você marque o dia e horário que fica melhor pra você.\n\n{CALENDLY_LINK}")
         st.session_state.estado = "FIM"
+        add_bot(DECISAO_REPASSE_COM)
 
 # ============================================
 # INTERFACE STREAMLIT
@@ -756,7 +779,7 @@ def main():
                     processar("aguardar")
                     st.rerun()
 
-        elif estado in ["PS_OP1", "PS_OP1_PAG", "PS_OP4", "SUS_HONORARIOS"]:
+        elif estado in ["PS_OP1_PERGUNTA", "PS_OP1_INVESTIMENTO_MSG", "PS_OP4_PERGUNTA", "SUS_HONORARIOS"]:
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("✅ SIM", use_container_width=True):
@@ -779,7 +802,7 @@ def main():
                         processar(str(i+1))
                         st.rerun()
 
-        elif estado in ["PS_PAGAMENTO_METODO_97", "PS_PAGAMENTO_METODO_500"]:
+        elif estado in ["PS_OP1_PAGAMENTO_METODO", "PS_OP4_PAGAMENTO_METODO"]:
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("💳 Cartão de Crédito", use_container_width=True):
@@ -793,15 +816,15 @@ def main():
                     st.rerun()
 
         elif estado == "DECISAO_PERGUNTA":
-            if st.button("👨‍👩‍👧 Juntos (cônjuge/familiar)", use_container_width=True):
-                add_user("Sim, meu cônjuge/familiar participa")
+            if st.button("👨‍👩‍👧 Sim, meu cônjuge/familiar", use_container_width=True):
+                add_user("Sim, meu cônjuge/familiar")
                 processar("conjuge")
                 st.rerun()
-            if st.button("👤 Sozinho(a)", use_container_width=True):
+            if st.button("👤 Não, eu decido tudo sozinho(a)", use_container_width=True):
                 add_user("Não, eu decido tudo sozinho(a)")
                 processar("sozinho")
                 st.rerun()
-            if st.button("📞 Tenho cônjuge, mas pode falar comigo", use_container_width=True):
+            if st.button("📞 Tem meu cônjuge, mas pode falar comigo", use_container_width=True):
                 add_user("Tem meu cônjuge, mas pode falar comigo")
                 processar("repasso")
                 st.rerun()
