@@ -1,6 +1,6 @@
 """
 Iara Bot v4 - Assistente Jurídica em Direito da Saúde
-VERSÃO 2 - FLUXO PLANO DE SAÚDE CORRIGIDO
+VERSÃO FINAL - TODAS AS CORREÇÕES APLICADAS
 Fluxos: SUS (Exames, Consultas, Especialidades), Planos de Saúde, Detecção de Valores
 """
 
@@ -67,20 +67,6 @@ st.markdown("""
     .stButton button:hover {
         background-color: #1e40af;
     }
-    .info-box {
-        background-color: #e0f2fe;
-        border-left: 4px solid #0284c7;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .success-box {
-        background-color: #dcfce7;
-        border-left: 4px solid #16a34a;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,11 +95,9 @@ def detectar_pergunta_valor(texto: str) -> bool:
 
 def responder_valor(dados: dict) -> str:
     """Retorna resposta contextualizada sobre valores"""
-    canal = dados.get("canal", "")
     sus_tipo = dados.get("sus_tipo", "")
     ps_busca = dados.get("ps_busca", "")
     
-    # Cenário 1: Cirurgia, Oncologia, Medicamento (Alta Complexidade)
     if "Cirurgia" in sus_tipo or "Oncologia" in sus_tipo or "Medicamento" in sus_tipo or "Bariátrica" in sus_tipo:
         return (
             "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada vida e cada urgência são únicas.\n\n"
@@ -121,23 +105,12 @@ def responder_valor(dados: dict) -> str:
             "Para situações assim, é necessária uma **Reunião Estratégica por vídeo (15 minutos)**. Nessa reunião, ela vai te apresentar o plano de ação para cercar o juiz e garantir que seu direito não seja negado, além de alinhar o investimento necessário.\n\n"
             f"Vamos agendar? {CALENDLY_LINK}"
         )
-    
-    # Cenário 2: Consultas e Exames
     elif "Consulta" in sus_tipo or "Exame" in sus_tipo or "Neurodivergências" in sus_tipo or "Endometriose" in sus_tipo:
         return (
             "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada caso exige um empenho técnico diferente.\n\n"
             "Como o seu caso envolve a liberação de Consulta ou Exame, a Dra. Lethicia faz questão de analisar pessoalmente a documentação na mesa de trabalho antes de passar qualquer orçamento.\n\n"
             "Valores para esse tipo de demanda são informados somente após essa triagem técnica, garantindo que o valor seja justo e condizente com a complexidade do seu pedido. Assim que ela analisar seus documentos, você receberá o retorno."
         )
-    
-    # Cenário 3: Reajustes, Contratos (Plano de Saúde)
-    elif "Consultoria" in ps_busca or "Reajuste" in ps_busca or "Coparticipação" in ps_busca:
-        return (
-            "Compreendo sua dúvida sobre o investimento. No meu escritório, tratamos cada contrato de forma individualizada, pois os valores de reajuste e as cláusulas variam drasticamente entre as operadoras.\n\n"
-            "Como o seu caso envolve uma análise financeira e contratual detalhada, a Dra. Lethicia não define valores por mensagem de texto.\n\n"
-            "É necessário uma **Reunião Estratégica** (vídeo ou áudio) para que ela te explique como buscaremos o reequilíbrio do seu plano e a restituição de valores pagos indevidamente, alinhando o investimento da consultoria nessa etapa."
-        )
-    
     else:
         return "Compreendo sua dúvida sobre o investimento. Para te passar um valor justo, a Dra. Lethicia precisa entender melhor a complexidade do seu caso. Vamos continuar com as perguntas para que eu possa coletar os dados necessários?"
 
@@ -155,6 +128,8 @@ def init_session():
         st.session_state.pergunta_idx = 0
     if "perguntas" not in st.session_state:
         st.session_state.perguntas = []
+    if "respostas_nao" not in st.session_state:
+        st.session_state.respostas_nao = 0
 
 def add_bot(msg: str):
     """Adiciona mensagem do bot"""
@@ -251,9 +226,9 @@ PERGUNTAS_SUS_ONCO = [
     "Entendi... vamos cuidar disso juntos 💙\n\n👉 Você consegue me contar qual é o tipo de câncer?",
     "👉 Você está aguardando atendimento ou tratamento pelo SUS? Se sim, há quanto tempo mais ou menos?",
     "Só pra eu entender melhor seu caso:\n\n👉 O diagnóstico já foi confirmado por biópsia? E você tem esse laudo em mãos?",
-    "Entendi...\n\n👉 Você já foi encaminhado para um hospital especializado em câncer (oncologia) pelo SUS ou ainda nem conseguiu passar com um especialista?\n\nInfelizmente, a fila do SUS não respeita o avanço da doença. Se o hospital não iniciou seu tratamento em 60 dias, a lei está sendo descumprida e precisamos forçar o início imediato via Justiça.",
-    "👉 Você possui um relatório médico explicando o tratamento que precisa fazer? (se quiser, pode enviar aqui também 📎)",
-    "Última perguntinha, que é bem importante:\n\n👉 O médico falou se o seu caso é urgente?",
+    "Entendi...\n\n👉 Você já foi encaminhado para um hospital especializado em câncer (oncologia) pelo SUS ou ainda nem conseguiu passar com um especialista?",
+    "👉 Você possui um relatório médico explicando o tratamento que precisa fazer?",
+    "👉 O médico falou se o seu caso é urgente?",
     "Você possui o comprovante de que está aguardando na fila? (Print do Meu SUS Digital, agendamento ou papel do SISREG)."
 ]
 
@@ -280,9 +255,9 @@ PERGUNTAS_SUS_ENDO = [
     "Obrigado por me contar 🙏.\n\n👉 Esse diagnóstico foi feito por exame? Se ainda não fez, qual exame está aguardando?",
     "Sei o quanto a dor e a incerteza cansam... não é justo que sua cirurgia ou exame continue demorando assim.\n\n👉 Você sente dores fortes ou crises que atrapalham sua rotina?",
     "Agora uma parte bem importante:\n\n👉 O médico indicou algum tratamento específico? (Ex: cirurgia de videolaparoscopia, medicamento...)",
-    "👉 Você tem relatório médico explicando esse tratamento?",
+    "Você tem relatório médico explicando esse tratamento?",
     "👉 Você está aguardando há quanto tempo mais ou menos?",
-    "👉 O médico colocou em relatório ou te informou se existe risco de piora ou agravamento sem o tratamento?",
+    "O médico colocou em relatório ou te informou se existe risco de piora ou agravamento sem o tratamento?",
     "Você possui o comprovante de que está aguardando na fila?"
 ]
 
@@ -337,32 +312,53 @@ MSG_SUS_PITCH_PROTOCOLO = (
 )
 
 MSG_SUS_HONORARIOS_INICIAIS = (
-    "Como é um trabalho de alta especialidade, o escritório cobra Honorários Iniciais para assumir o caso e entrar com um processo judicial. "
+    "Como é um trabalho de alta especialidade, o escritório cobra Honorários Iniciais para assumir o caso e protocolar o pedido de liminar. "
     "Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?"
 )
 
-MSG_SUS_ENCERRAMENTO = (
-    "Compreendo. Infelizmente, sem o interesse em avançar com uma medida judicial, o seu caso continuará dependendo exclusivamente da velocidade da fila do SUS.\n\n"
+MSG_SUS_HONORARIOS_SIM = (
+    "Ótimo. Isso mostra que você prioriza sua saúde acima da burocracia do Estado.\n\n"
+    "Vou encaminhar seus dados para a mesa da Dra. Lethicia neste momento. Em instantes, ela entrará em contato aqui por este chat para te passar a estratégia de liberação e os valores para o seu caso. Fique atento(a)!"
+)
+
+MSG_SUS_HONORARIOS_NAO = (
+    "Compreendo. Infelizmente, sem o interesse em avançar com uma medida judicial, o seu caso continuará dependendo exclusivamente da velocidade da fila do SUS, que como sabemos, não tem previsão.\n\n"
     "Como o escritório da Dra. Lethicia foca apenas em quem deseja forçar a solução imediata, estamos encerrando seu atendimento por aqui.\n\n"
     "Caso a sua situação se agrave ou você decida que não pode mais esperar, sinta-se à vontade para retornar. Desejamos sorte no seu tratamento."
 )
 
+MSG_FALTA_DOCUMENTOS = (
+    "Entendi sua situação. Para que eu consiga te ajudar judicialmente a conseguir o atendimento que você precisa no SUS, o juiz exige obrigatoriamente alguns documentos que comprovam que o Estado está falhando com você.\n\n"
+    "Sem um laudo médico atualizado e o comprovante de inscrição na fila de espera, o processo corre o risco de ser negado logo no início.\n\n"
+    "Minha orientação agora: vá até a unidade de saúde, peça a atualização do seu laudo e tire uma foto do comprovante da fila. Assim que tiver esses papéis em mãos, me envie aqui para agendarmos nossa reunião de estratégia, combinado?"
+)
+
+MSG_SUS_NEGATIVA_JUDICIAL = (
+    "Nesse caso só é possível revertermos a negativa do plano com medidas judiciais. "
+    "Você está no momento exato de agirmos para buscar o seu direito judicialmente. "
+    "Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei. "
+    "O próximo passo agora é uma reunião rápida para eu te explicar como funciona o processo e valores de honorários. "
+    "Não se preocupe, é uma reunião gratuita e on-line. "
+    "Antes de agendarmos: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
+    "como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
+)
+
 # ============================================
-# FLUXO PLANO DE SAÚDE - MENSAGENS (CORRIGIDAS)
+# FLUXO PLANO DE SAÚDE - MENSAGENS
 # ============================================
 
 PS_BUSCA = (
     "Obrigado por todas as informações. Já consigo ter um bom entendimento da sua situação.\n\n"
     "Agora me diz: o que você está buscando nesse momento? Escolha a opção que mais se encaixa com onde você está agora:\n\n"
-    "1️⃣ **Quero entender se o plano de saúde é obrigado a cobrir determinado tratamento** ou Tenho uma dúvida específica ou um caso diferente e gostaria de orientação jurídica para entender quais são meus direitos e possibilidades.\n\n"
-    "2️⃣ **Já tenho a negativa do plano:** Desejo orientação especializada para ingressar com a ação judicial e buscar a liberação do meu tratamento.\n\n"
-    "3️⃣ **Ainda não tenho a negativa, mas preciso me preparar:** Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
-    "4️⃣ **Preciso de uma consultoria jurídica:** Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória pela ANS."
+    "1. Quero entender se o plano de saúde é obrigado a cobrir determinado tratamento ou Tenho uma dúvida específica ou um caso diferente e gostaria de orientação jurídica para entender quais são meus direitos e possibilidades.\n\n"
+    "2. Já tenho a negativa do plano: Desejo orientação especializada para ingressar com a ação judicial e buscar a liberação do meu tratamento.\n\n"
+    "3. Ainda não tenho a negativa, mas preciso me preparar: Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
+    "4. Preciso de uma consultoria jurídica: Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória pela ANS."
 )
 
 PS_OP1_MSG = (
-    "Perfeito! Para esse tipo de dúvida pontual, oferecemos o **Atendimento Expresso**. "
-    "Diferente da consultoria completa, aqui você envia sua dúvida e um especialista te responde de forma técnica e direta, "
+    "Perfeito! Para esse tipo de dúvida pontual, oferecemos o **Atendimento Particular**. "
+    "Diferente da consultoria completa, aqui você tira todas as suas dúvidas, tem um direcionamento claro do seu caso e um especialista te responde de forma técnica e direta, "
     "analisando se o seu direito é garantido por lei. Isso te ajudaria?"
 )
 
@@ -377,16 +373,16 @@ PS_OP1_INVESTIMENTO = (
 
 PS_OP1_PAGAMENTO = (
     "Perfeito! Vamos reservar o seu horário.\n\n"
-    "**Passo 1:** Escolha o melhor dia e hora no link abaixo:\n"
-    f"{CALENDLY_LINK}\n\n"
-    "**Passo 2:** Após escolher o horário, realize o pagamento da consultoria. "
-    "Você vai realizar o pagamento via **Pix** ou **Cartão de Crédito**?"
+    "Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?"
+)
+
+PS_OP1_CONFIRMACAO = (
+    "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
 )
 
 PS_OP4_MSG = (
     "Entendido. Para casos de análise contratual, reajustes ou dúvidas preventivas, realizamos uma **Consultoria Jurídica Especializada**.\n\n"
-    "Nesta reunião online um advogado especialista em Direito da Saúde analisará detalhadamente o seu caso, documentos e contratos "
-    "para te entregar um parecer seguro sobre os seus direitos.\n\n"
+    "Nesta reunião online um advogado especialista em Direito da Saúde analisará detalhadamente o seu caso, documentos e contratos para te entregar um parecer seguro sobre os seus direitos.\n\n"
     "**Informações sobre a Consultoria:**\n"
     "• **Investimento:** R$ 500,00 (referente à análise técnica e reserva de horário).\n"
     "• **Duração:** Até 1 hora.\n"
@@ -396,19 +392,18 @@ PS_OP4_MSG = (
 
 PS_OP4_PAGAMENTO = (
     "Perfeito! Vamos reservar o seu horário.\n\n"
-    "**Passo 1:** Escolha o melhor dia e hora no link abaixo:\n"
-    f"{CALENDLY_LINK}\n\n"
-    "**Passo 2:** Após escolher o horário, realize o pagamento da consultoria. "
-    "Você vai realizar o pagamento via **Pix** ou **Cartão de Crédito**?"
+    "Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?"
 )
 
-PS_NEGATIVA_JUDICIAL = (
-    "Nesse caso só é possível revertermos a negativa do plano com medidas judiciais. "
-    "Você está no momento exato de agirmos para buscar o seu direito judicialmente. "
-    "Agora não é mais hora de esperar, é hora de exigir que o plano de saúde cumpra a lei.\n\n"
-    "O próximo passo agora é uma reunião rápida para eu te explicar como funciona o processo e valores de honorários.\n\n"
-    "Antes de agendarmos: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
-    "como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
+PS_OP4_CONFIRMACAO = (
+    "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
+)
+
+MSG_ENCERRAMENTO_NAO = (
+    "Entendo perfeitamente e respeito sua decisão.\n\n"
+    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com liminares em andamento. "
+    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
+    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
 )
 
 DECISAO_SIM_MSG = (
@@ -433,13 +428,6 @@ DECISAO_REPASSE_MSG = (
 
 DECISAO_REPASSE_COM = (
     f"Logo abaixo vou te mandar a agenda da Dra Lethicia, e você marque o dia e horário que fica melhor pra você:\n\n{CALENDLY_LINK}"
-)
-
-MSG_ENCERRAMENTO_NAO = (
-    "Entendo perfeitamente e respeito sua decisão.\n\n"
-    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com liminares em andamento. "
-    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
-    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
 )
 
 # ============================================
@@ -550,13 +538,29 @@ def processar(resposta: str):
     elif estado == "SUS_PERGUNTAS_LOOP":
         idx = st.session_state.pergunta_idx
         dados[f"pergunta_{idx}"] = resposta
+        
+        # Contar respostas "não" para perguntas críticas
+        perguntas_criticas = ["Você tem relatório médico explicando esse tratamento?", 
+                             "O médico colocou em relatório ou te informou se existe risco de piora ou agravamento sem o tratamento?",
+                             "Você possui o comprovante de que está aguardando na fila?",
+                             "VOCE JÁ TEM DIAGNÓSTICO FECHADO?"]
+        
+        if any(p in st.session_state.perguntas[idx] for p in perguntas_criticas):
+            if _nao(resposta):
+                st.session_state.respostas_nao += 1
+        
         idx += 1
         if idx < len(st.session_state.perguntas):
             st.session_state.pergunta_idx = idx
             add_bot(st.session_state.perguntas[idx])
         else:
-            st.session_state.estado = "SUS_RISCO_SAUDE"
-            add_bot(MSG_SUS_RISCO_SAUDE)
+            # Verificar se faltam documentos críticos
+            if st.session_state.respostas_nao >= 2:
+                st.session_state.estado = "FIM"
+                add_bot(MSG_FALTA_DOCUMENTOS)
+            else:
+                st.session_state.estado = "SUS_RISCO_SAUDE"
+                add_bot(MSG_SUS_RISCO_SAUDE)
 
     elif estado == "SUS_RISCO_SAUDE":
         st.session_state.estado = "SUS_PITCH"
@@ -567,18 +571,18 @@ def processar(resposta: str):
             st.session_state.estado = "SUS_HONORARIOS"
             add_bot(MSG_SUS_HONORARIOS_INICIAIS)
         else:
-            add_bot(MSG_SUS_ENCERRAMENTO)
+            add_bot(MSG_SUS_HONORARIOS_NAO)
             st.session_state.estado = "FIM"
 
     elif estado == "SUS_HONORARIOS":
         if _sim(resposta):
             st.session_state.estado = "DECISAO_PERGUNTA"
-            add_bot(PS_NEGATIVA_JUDICIAL)
+            add_bot(MSG_SUS_NEGATIVA_JUDICIAL)
         else:
-            add_bot(MSG_SUS_ENCERRAMENTO)
+            add_bot(MSG_SUS_HONORARIOS_NAO)
             st.session_state.estado = "FIM"
 
-    # --- FLUXO PLANO DE SAÚDE (CORRIGIDO) ---
+    # --- FLUXO PLANO DE SAÚDE ---
     elif estado == "PS_BUSCA":
         if "1" in resposta:
             dados["ps_busca"] = "Dúvida Cobertura"
@@ -587,7 +591,7 @@ def processar(resposta: str):
         elif "2" in resposta or "3" in resposta:
             dados["ps_busca"] = "Negativa Judicial"
             st.session_state.estado = "DECISAO_PERGUNTA"
-            add_bot(PS_NEGATIVA_JUDICIAL)
+            add_bot(MSG_SUS_NEGATIVA_JUDICIAL)
         elif "4" in resposta:
             dados["ps_busca"] = "Consultoria Técnica"
             st.session_state.estado = "PS_OP4_PERGUNTA"
@@ -611,10 +615,10 @@ def processar(resposta: str):
 
     elif estado == "PS_OP1_PAGAMENTO_METODO":
         if "cartão" in _n(resposta):
-            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
+            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_97}\n\n{PS_OP1_CONFIRMACAO}")
             st.session_state.estado = "FIM"
         elif "pix" in _n(resposta):
-            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_97}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
+            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_97}\n\n{PS_OP1_CONFIRMACAO}")
             st.session_state.estado = "FIM"
 
     elif estado == "PS_OP4_PERGUNTA":
@@ -627,10 +631,10 @@ def processar(resposta: str):
 
     elif estado == "PS_OP4_PAGAMENTO_METODO":
         if "cartão" in _n(resposta):
-            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_500}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
+            add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_500}\n\n{PS_OP4_CONFIRMACAO}")
             st.session_state.estado = "FIM"
         elif "pix" in _n(resposta):
-            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_500}\n\nApós realizar o pagamento, você receberá um e-mail de confirmação com as instruções para a reunião.")
+            add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_500}\n\n{PS_OP4_CONFIRMACAO}")
             st.session_state.estado = "FIM"
 
     # --- DECISÃO E AGENDAMENTO ---
@@ -655,7 +659,7 @@ def processar(resposta: str):
 
 def main():
     st.title("⚖️ Iara Bot - Assistente Jurídica em Direito da Saúde")
-    st.caption(f"Especialista: {L} | Atendimento: SUS, Planos de Saúde e INSS")
+    st.caption(f"Especialista: {L} | Atendimento: SUS, Planos de Saúde")
 
     init_session()
 
@@ -673,13 +677,6 @@ def main():
         if st.button("🔄 Nova Conversa", use_container_width=True):
             reset()
             st.rerun()
-
-        st.markdown("---")
-        st.markdown("### 📝 Sobre Iara Bot")
-        st.markdown(
-            "Assistente jurídico inteligente especializado em Direito da Saúde. "
-            "Qualifica automaticamente casos de SUS, Planos de Saúde e INSS."
-        )
 
     # Chat Container
     col1, col2 = st.columns([3, 1])
