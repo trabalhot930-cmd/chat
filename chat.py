@@ -1,6 +1,6 @@
 """
 Iara Bot - Assistente Jurídica em Direito da Saúde
-VERSÃO COMPLETA FINAL - SUS + PLANO DE SAÚDE 100% IMPLEMENTADOS
+VERSÃO PERFEITA E COMPLETA - SUS + PLANO DE SAÚDE 100% CORRETO
 """
 
 import streamlit as st
@@ -239,7 +239,7 @@ MSG_EXPLICACAO = (
 
 MSG_HONORARIOS = (
     "Como é um trabalho de alta especialidade, o escritório cobra *Honorários Iniciais* "
-    "para assumir o caso e entrar com um processo judicial. Prosseguir com esse caso faz sentido "
+    "para assumir o caso e protocolar o pedido de liminar. Prosseguir com esse caso faz sentido "
     "para você garantir sua saúde hoje e sair dessa espera?"
 )
 
@@ -273,52 +273,25 @@ MSG_SUS_NEGATIVA = (
     "como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
 )
 
-# ============================================
-# PLANO DE SAÚDE - MENSAGENS INICIAIS
-# ============================================
-
-PS_TEMPO = "Você já tem seu plano de saúde há mais de 2 anos?\n\n1️⃣ Sim\n2️⃣ Não"
-PS_TIPO_PLANO = "Seu plano é pessoa física ou empresarial/CNPJ?\n\n1️⃣ Pessoa Física\n2️⃣ Empresarial/CNPJ"
-
-PS_SITUACAO = (
-    "Para que eu possa te direcionar corretamente, qual é a sua situação atual com o plano de saúde?\n\n"
-    "1️⃣ Reparadora\n2️⃣ Negativa de cirurgia\n3️⃣ Medicamento negado\n4️⃣ Exame negado\n"
-    "5️⃣ Home care\n6️⃣ Terapias\n7️⃣ Reajuste\n8️⃣ Coparticipação\n9️⃣ Erro médico\n🔟 OUTRO"
+MSG_SUS_SIM_HONORARIOS = (
+    "Ótimo. Isso mostra que você prioriza sua saúde acima da burocracia do Estado.\n\n"
+    "Vou encaminhar seus dados para a mesa da Dra. Lethicia neste momento. Em instantes, ela entrará em contato aqui por este chat para te passar a estratégia de liberação e os valores para o seu caso. Fique atento(a)!"
 )
 
-PS_NAO_2ANOS = "Entendo! Muitas pessoas acreditam que precisam esperar 2 anos para ter direito a cirurgias ou tratamentos complexos, mas a lei nem sempre funciona assim.\n\nMe conta, qual o tratamento que você precisa fazer?"
-PS_NAO_2ANOS_URG = "Existem situações onde o plano é obrigado a cobrir o seu procedimento mesmo que você tenha poucos meses de contrato, especialmente se houver urgência ou se a doença não foi declarada por má-fé.\n\nNo seu caso, o médico comentou se isso é urgente ou pode trazer algum risco se não for feito?"
-PS_URGENCIA = "Perfeito, isso é importante 😊\n\nSE HÁ URGÊNCIA, o plano já deveria cobrir normalmente esse tipo de situação. Mesmo assim, eles podem acabar negando indevidamente em alguns casos.\n\nO médico indicou que o tratamento é urgente?"
-
-# ============================================
-# PLANO - REPARADORA
-# ============================================
-
-PS_REP_Q1 = "👉 Você realizou a cirurgia bariátrica ou teve uma perda de peso expressiva através de dieta, exercícios ou uso das canetas emagrecedoras (Mounjaro, Ozempic, Tirzepatida...)?"
-PS_REP_Q2 = "👉 Você já chegou ou ainda falta pouco pro peso que gostaria?\n\n1️⃣ Sim, já atingi meu objetivo\n2️⃣ Ainda não"
-PS_REP_NAO_PESO = (
-    "Faz todo sentido querer entender bem a situação antes de tomar qualquer decisão.\n\n"
-    "Para isso, ofereço uma *consulta de orientação jurídica* — você fala diretamente com a Dra., "
-    "tira todas as suas dúvidas e entende com clareza quais são seus direitos e quais caminhos "
-    "existem para o seu caso.\n\n"
-    "💬 O valor da consulta é de *R$ 67,00* e é feita online, no horário que melhor funcionar pra você. "
-    "E se durante ou depois da consulta você decidir que quer avançar com o acompanhamento jurídico "
-    "completo, também é possível — aí conversamos sobre isso na hora. Mas sem nenhuma pressão.\n\n"
-    "Gostaria de agendar um horário ainda essa semana?"
+MSG_SUS_NAO_HONORARIOS = (
+    "Compreendo. Infelizmente, sem o interesse em avançar com uma medida judicial, "
+    "o seu caso continuará dependendo exclusivamente da velocidade da fila do SUS, que como sabemos, não tem previsão.\n\n"
+    "Como o escritório da Dra. Lethicia foca apenas em quem deseja forçar a solução imediata, "
+    "estamos encerrando seu atendimento por aqui.\n\n"
+    "Caso a sua situação se agrave ou você decida que não pode mais esperar, "
+    "sinta-se à vontade para retornar. Desejamos sorte no seu tratamento."
 )
-PS_REP_Q3 = (
-    "Eu entendo que essa pele que restou é o capítulo final de uma grande superação, mas ela também pode ser um peso físico e emocional. Para eu desenhar a melhor estratégia para você, me conte um pouco…\n\n"
-    "Esse excesso de pele hoje te causa dores, assaduras ou dermatites que não curam? E além do corpo, como isso tem afetado a sua autoestima e a sua liberdade de movimento no dia a dia?"
-)
-PS_REP_Q4 = "👉 Quais cirurgias reparadoras você teria interesse em fazer?"
-PS_REP_Q5 = "Certo… Você já chegou a ir no médico cirurgião plástico pra solicitar as reparadoras e emitir os laudos?\n\n1️⃣ Sim\n2️⃣ Não"
-PS_REP_Q6 = "Você está no caminho certo 💙 Muitas pessoas acabam procurando ajuda só depois da negativa ou quando o problema já está mais avançado. Mas quando a gente atua antes, conseguimos evitar erros e fortalecer muito o caso.\n\nVocê prefere tentar sozinho com o plano ou quer o acompanhamento da Dra. para garantir que o seu pedido seja feito à prova de negativas?"
 
 # ============================================
-# PLANO - PÓS PERGUNTAS (COM 4 OPÇÕES)
+# PLANO DE SAÚDE - MENSAGENS
 # ============================================
 
-PS_POS = (
+PS_BUSCA = (
     "Obrigado por todas as informações. Já consigo ter um bom entendimento da sua situação.\n\n"
     "Agora me diz: o que você está buscando nesse momento? Escolha a opção que mais se encaixa com onde você está agora:\n\n"
     "1️⃣ Quero entender se o plano de saúde é obrigado a cobrir determinado tratamento ou Tenho uma dúvida específica ou um caso diferente e gostaria de orientação jurídica para entender quais são meus direitos e possibilidades.\n\n"
@@ -327,15 +300,19 @@ PS_POS = (
     "4️⃣ Preciso de uma consultoria jurídica: Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória pela ANS."
 )
 
-# Opção 1 - Atendimento Particular
-PS_OP1 = "Perfeito! Para esse tipo de dúvida pontual, oferecemos o **Atendimento Particular**. Diferente da consultoria completa, aqui você tira todas as suas dúvidas, tem um direcionamento claro do seu caso e um especialista te responde de forma técnica e direta, analisando se o seu direito é garantido por lei. Isso te ajudaria?"
+# OPÇÃO 1 - ATENDIMENTO PARTICULAR
+PS_OP1_PERGUNTA = (
+    "Perfeito! Para esse tipo de dúvida pontual, oferecemos o Atendimento Particular. "
+    "Diferente da consultoria completa, aqui você tira todas as suas dúvidas, tem um direcionamento claro do seu caso "
+    "e um especialista te responde de forma técnica e direta, analisando se o seu direito é garantido por lei. Isso te ajudaria?"
+)
 
 PS_OP1_DETALHES = (
-    "O investimento no atendimento particular é de **R$ 97,00** e é feito online.\n\n"
+    "O investimento no atendimento particular é de R$ 97,00 e é feito online.\n\n"
     "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
-    "• **Resposta Técnica Direta:** Esclarecimento sobre a obrigatoriedade de cobertura (Rol da ANS e entendimentos judiciais recentes).\n"
-    "• **Análise de Viabilidade:** Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n"
-    "• **Indicação de Documentos:** Lista do que você precisa providenciar imediatamente para não perder seus direitos.\n\n"
+    "• Resposta Técnica Direta: Esclarecimento sobre a obrigatoriedade de cobertura (Rol da ANS e entendimentos judiciais recentes).\n"
+    "• Análise de Viabilidade: Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n"
+    "• Indicação de Documentos: Lista do que você precisa providenciar imediatamente para não perder seus direitos.\n\n"
     "Podemos marcar um horário pra você na agenda da Dra Lethicia?"
 )
 
@@ -348,17 +325,18 @@ PS_OP1_CONFIRMACAO = (
     "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
 )
 
-# Opção 2 - Já tem negativa
-PS_OP2 = (
+# OPÇÃO 2 - JÁ TEM NEGATIVA
+PS_OP2_PERGUNTA = (
     "Nesse caso só é possível revertermos a negativa do plano com medidas judiciais. "
     "Você está no momento exato de agirmos para buscar o seu direito judicialmente. "
     "Agora não é mais hora de esperar, é hora de exigir que o plano de saúde cumpra a lei.\n\n"
     "O próximo passo agora é uma reunião rápida para eu te explicar como funciona o processo e valores de honorários.\n\n"
-    "Antes de agendarmos: além de você, tem mais alguém que participe das decisões familiares ou financeiras, como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
+    "Antes de agendarmos: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
+    "como seu esposo/esposa, que seria importante estar presente para já tirarmos todas as dúvidas de uma vez?"
 )
 
-# Opção 3 - Preventivo
-PS_OP3 = (
+# OPÇÃO 3 - PREVENTIVO
+PS_OP3_PERGUNTA = (
     "Você está no caminho certo, buscar uma orientação antes de pedir ao plano! "
     "Esperar a negativa do plano para só depois agir é o erro que faz muita gente perder meses de tratamento.\n\n"
     "Com o acompanhamento jurídico, você tem as orientações corretas sobre quais médicos deve ir e como que deve ser feitos os laudos, "
@@ -367,16 +345,20 @@ PS_OP3 = (
     "assim não precisa corrigir ou ficar correndo atrás de laudos depois. Entende?"
 )
 
-PS_OP3_PERMISSAO = "Você prefere tentar sozinho com o plano ou quer o acompanhamento da Dra. para garantir que o seu pedido seja feito à prova de negativas (principalmente ao entrarmos na justiça)?"
+PS_OP3_PERMISSAO = (
+    "Você prefere tentar sozinho com o plano ou quer o acompanhamento da Dra. para garantir que o seu pedido seja feito à prova de negativas "
+    "(principalmente ao entrarmos na justiça)?"
+)
 
-# Opção 4 - Consultoria Jurídica
-PS_OP4 = (
-    "Entendido. Para casos de análise contratual, reajustes ou dúvidas preventivas, realizamos uma **Consultoria Jurídica Especializada**.\n\n"
-    "Nesta reunião online um advogado especialista em Direito da Saúde analisará detalhadamente o seu caso, documentos e contratos para te entregar um parecer seguro sobre os seus direitos.\n\n"
-    "**Informações sobre a Consultoria:**\n"
-    "• **Investimento:** R$ 500,00 (referente à análise técnica e reserva de horário).\n"
-    "• **Duração:** Até 1 hora.\n"
-    "• **Objetivo:** Diagnóstico completo e estratégia jurídica personalizada.\n\n"
+# OPÇÃO 4 - CONSULTORIA JURÍDICA
+PS_OP4_PERGUNTA = (
+    "Entendido. Para casos de análise contratual, reajustes ou dúvidas preventivas, realizamos uma Consultoria Jurídica Especializada.\n\n"
+    "Nesta reunião online um advogado especialista em Direito da Saúde analisará detalhadamente o seu caso, documentos e contratos "
+    "para te entregar um parecer seguro sobre os seus direitos.\n\n"
+    "Informações sobre a Consultoria:\n"
+    "• Investimento: R$ 500,00 (referente à análise técnica e reserva de horário).\n"
+    "• Duração: Até 1 hora.\n"
+    "• Objetivo: Diagnóstico completo e estratégia jurídica personalizada.\n\n"
     "Deseja prosseguir com o agendamento?"
 )
 
@@ -389,18 +371,15 @@ PS_OP4_CONFIRMACAO = (
     "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
 )
 
+# ENCERRAMENTO
 PS_ENCERRAMENTO = (
     "Entendo perfeitamente e respeito sua decisão.\n\n"
-    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com "
-    "liminares em andamento. Lembre-se apenas que, no Direito da Saúde, o tempo é um "
-    "fator determinante para o sucesso do tratamento.\n\n"
-    "Caso precise de suporte especializado no futuro, meus canais continuam à disposição. 🙏"
+    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com liminares em andamento. "
+    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
+    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
 )
 
-# ============================================
 # DECISÃO COMPARTILHADA
-# ============================================
-
 DECISAO_SIM = (
     "Excelente! É fundamental que ele(a) participe, pois como o Direito à Saúde envolve "
     "prazos muito curtos e decisões imediatas sobre o tratamento, é bom que todos "
@@ -452,8 +431,8 @@ def processar(resposta: str):
             add_bot(MSG_SUS_DEMANDA)
         else:
             dados["canal"] = "PLANO"
-            st.session_state.estado = "PLANO_TEMPO"
-            add_bot(PS_TEMPO)
+            st.session_state.estado = "PS_BUSCA"
+            add_bot(PS_BUSCA)
 
     # ========== SUS_DEMANDA ==========
     elif estado == "SUS_DEMANDA":
@@ -498,8 +477,8 @@ def processar(resposta: str):
         
         dados[f"resp_{idx}"] = resposta
         
-        # Contar respostas "não" para perguntas críticas
-        if idx >= len(perguntas) - 3:  # Últimas 3 perguntas são críticas
+        # Contar respostas "não" para perguntas críticas (últimas 4)
+        if idx >= len(perguntas) - 4:
             if _nao(resposta):
                 st.session_state.respostas_nao += 1
         
@@ -535,138 +514,45 @@ def processar(resposta: str):
     # ========== HONORARIOS ==========
     elif estado == "HONORARIOS":
         if _sim(resposta):
-            st.session_state.estado = "DECISAO_COMPARTILHADA"
-            add_bot(MSG_SUS_NEGATIVA)
+            add_bot(MSG_SUS_SIM_HONORARIOS)
+            st.session_state.estado = "FIM"
         else:
-            add_bot(MSG_ENCERRAMENTO_SUS)
+            add_bot(MSG_SUS_NAO_HONORARIOS)
             st.session_state.estado = "FIM"
 
-    # ========== PLANO_TEMPO ==========
-    elif estado == "PLANO_TEMPO":
-        if _sim(resposta):
-            dados["plano_2anos"] = "sim"
-            st.session_state.estado = "PLANO_TIPO"
-            add_bot(PS_TIPO_PLANO)
-        else:
-            dados["plano_2anos"] = "nao"
-            st.session_state.estado = "PLANO_NAO_2ANOS"
-            add_bot(PS_NAO_2ANOS)
-
-    # ========== PLANO_TIPO ==========
-    elif estado == "PLANO_TIPO":
-        dados["plano_tipo"] = resposta
-        st.session_state.estado = "PLANO_SITUACAO"
-        add_bot(PS_SITUACAO)
-
-    # ========== PLANO_NAO_2ANOS ==========
-    elif estado == "PLANO_NAO_2ANOS":
-        dados["tratamento_sem_carencia"] = resposta
-        st.session_state.estado = "PLANO_NAO_2ANOS_URG"
-        add_bot(PS_NAO_2ANOS_URG)
-
-    # ========== PLANO_NAO_2ANOS_URG ==========
-    elif estado == "PLANO_NAO_2ANOS_URG":
-        dados["urgencia_plano"] = resposta
-        st.session_state.estado = "PLANO_URGENCIA"
-        add_bot(PS_URGENCIA)
-
-    # ========== PLANO_URGENCIA ==========
-    elif estado == "PLANO_URGENCIA":
-        dados["urgencia_confirmada"] = resposta
-        st.session_state.estado = "PLANO_SITUACAO"
-        add_bot(PS_SITUACAO)
-
-    # ========== PLANO_SITUACAO ==========
-    elif estado == "PLANO_SITUACAO":
-        dados["situacao"] = resposta
-        
-        if "reparadora" in _n(resposta) or "1" in resposta:
-            st.session_state.estado = "PS_REP_Q1"
-            add_bot(PS_REP_Q1)
-        else:
-            st.session_state.estado = "PS_POS"
-            add_bot(PS_POS)
-
-    # ========== PS REPARADORA ==========
-    elif estado == "PS_REP_Q1":
-        dados["ps_rep_q1"] = resposta
-        st.session_state.estado = "PS_REP_Q2"
-        add_bot(PS_REP_Q2)
-    
-    elif estado == "PS_REP_Q2":
-        if "ainda não" in _n(resposta) or "2" in resposta:
-            add_bot(PS_REP_NAO_PESO)
-            st.session_state.estado = "PS_REP_AGUARDANDO"
-        else:
-            st.session_state.estado = "PS_REP_Q3"
-            add_bot(PS_REP_Q3)
-    
-    elif estado == "PS_REP_AGUARDANDO":
-        if _sim(resposta):
-            add_bot(f"Ótimo! Agende sua consulta: {CALENDLY_LINK}")
-        else:
-            add_bot(PS_ENCERRAMENTO)
-        st.session_state.estado = "FIM"
-    
-    elif estado == "PS_REP_Q3":
-        dados["ps_rep_q3"] = resposta
-        st.session_state.estado = "PS_REP_Q4"
-        add_bot(PS_REP_Q4)
-    
-    elif estado == "PS_REP_Q4":
-        dados["ps_rep_q4"] = resposta
-        st.session_state.estado = "PS_REP_Q5"
-        add_bot(PS_REP_Q5)
-    
-    elif estado == "PS_REP_Q5":
-        dados["ps_rep_q5"] = resposta
-        st.session_state.estado = "PS_REP_Q6"
-        add_bot(PS_REP_Q6)
-    
-    elif estado == "PS_REP_Q6":
-        if "acompanhamento" in _n(resposta):
-            st.session_state.estado = "PS_POS"
-            add_bot(PS_POS)
-        else:
-            add_bot(PS_ENCERRAMENTO)
-            st.session_state.estado = "FIM"
-
-    # ========== PS_POS ==========
-    elif estado == "PS_POS":
-        dados["ps_pos_escolha"] = resposta
+    # ========== PLANO DE SAÚDE - BUSCA ==========
+    elif estado == "PS_BUSCA":
         if "1" in resposta:
-            st.session_state.estado = "PS_OP1"
-            add_bot(PS_OP1)
+            st.session_state.estado = "PS_OP1_PERGUNTA"
+            add_bot(PS_OP1_PERGUNTA)
         elif "2" in resposta:
-            st.session_state.estado = "PS_OP2"
-            add_bot(PS_OP2)
+            st.session_state.estado = "PS_OP2_PERGUNTA"
+            add_bot(PS_OP2_PERGUNTA)
         elif "3" in resposta:
-            st.session_state.estado = "PS_OP3"
-            add_bot(PS_OP3)
+            st.session_state.estado = "PS_OP3_PERGUNTA"
+            add_bot(PS_OP3_PERGUNTA)
         elif "4" in resposta:
-            st.session_state.estado = "PS_OP4"
-            add_bot(PS_OP4)
+            st.session_state.estado = "PS_OP4_PERGUNTA"
+            add_bot(PS_OP4_PERGUNTA)
 
-    # ========== PS_OP1 ==========
-    elif estado == "PS_OP1":
+    # ========== PS_OP1 - ATENDIMENTO PARTICULAR ==========
+    elif estado == "PS_OP1_PERGUNTA":
         if _sim(resposta):
+            st.session_state.estado = "PS_OP1_DETALHES"
             add_bot(PS_OP1_DETALHES)
-            st.session_state.estado = "PS_OP1_AGENDAMENTO"
         else:
-            add_bot(PS_ENCERRAMENTO)
             st.session_state.estado = "FIM"
+            add_bot(PS_ENCERRAMENTO)
 
-    # ========== PS_OP1_AGENDAMENTO ==========
-    elif estado == "PS_OP1_AGENDAMENTO":
+    elif estado == "PS_OP1_DETALHES":
         if _sim(resposta):
-            st.session_state.estado = "PS_OP1_PAGAMENTO_METODO"
+            st.session_state.estado = "PS_OP1_PAGAMENTO"
             add_bot(PS_OP1_PAGAMENTO)
         else:
-            add_bot(PS_ENCERRAMENTO)
             st.session_state.estado = "FIM"
+            add_bot(PS_ENCERRAMENTO)
 
-    # ========== PS_OP1_PAGAMENTO_METODO ==========
-    elif estado == "PS_OP1_PAGAMENTO_METODO":
+    elif estado == "PS_OP1_PAGAMENTO":
         if "cartão" in _n(resposta):
             add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_97}\n\n{PS_OP1_CONFIRMACAO}")
             st.session_state.estado = "FIM"
@@ -674,31 +560,28 @@ def processar(resposta: str):
             add_bot(f"✅ Aqui está o link para pagamento via **Pix**:\n\n{LINK_PIX_97}\n\n{PS_OP1_CONFIRMACAO}")
             st.session_state.estado = "FIM"
 
-    # ========== PS_OP2 ==========
-    elif estado == "PS_OP2":
+    # ========== PS_OP2 - JÁ TEM NEGATIVA ==========
+    elif estado == "PS_OP2_PERGUNTA":
         st.session_state.estado = "DECISAO_COMPARTILHADA"
 
-    # ========== PS_OP3 ==========
-    elif estado == "PS_OP3":
-        dados["ps_op3_entendeu"] = resposta
+    # ========== PS_OP3 - PREVENTIVO ==========
+    elif estado == "PS_OP3_PERGUNTA":
         st.session_state.estado = "PS_OP3_PERMISSAO"
         add_bot(PS_OP3_PERMISSAO)
 
-    # ========== PS_OP3_PERMISSAO ==========
     elif estado == "PS_OP3_PERMISSAO":
         st.session_state.estado = "DECISAO_COMPARTILHADA"
 
-    # ========== PS_OP4 ==========
-    elif estado == "PS_OP4":
+    # ========== PS_OP4 - CONSULTORIA JURÍDICA ==========
+    elif estado == "PS_OP4_PERGUNTA":
         if _sim(resposta):
-            st.session_state.estado = "PS_OP4_PAGAMENTO_METODO"
+            st.session_state.estado = "PS_OP4_PAGAMENTO"
             add_bot(PS_OP4_PAGAMENTO)
         else:
-            add_bot(PS_ENCERRAMENTO)
             st.session_state.estado = "FIM"
+            add_bot(PS_ENCERRAMENTO)
 
-    # ========== PS_OP4_PAGAMENTO_METODO ==========
-    elif estado == "PS_OP4_PAGAMENTO_METODO":
+    elif estado == "PS_OP4_PAGAMENTO":
         if "cartão" in _n(resposta):
             add_bot(f"✅ Aqui está o link para pagamento via **Cartão de Crédito**:\n\n{LINK_CARTAO_500}\n\n{PS_OP4_CONFIRMACAO}")
             st.session_state.estado = "FIM"
@@ -822,69 +705,7 @@ def main():
                     processar("NÃO")
                     st.rerun()
 
-        elif estado == "PLANO_TEMPO":
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("1️⃣ Sim", use_container_width=True):
-                    add_user("Sim")
-                    processar("sim")
-                    st.rerun()
-            with col_b:
-                if st.button("2️⃣ Não", use_container_width=True):
-                    add_user("Não")
-                    processar("não")
-                    st.rerun()
-
-        elif estado == "PLANO_TIPO":
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("1️⃣ Pessoa Física", use_container_width=True):
-                    add_user("Pessoa Física")
-                    processar("1")
-                    st.rerun()
-            with col_b:
-                if st.button("2️⃣ Empresarial/CNPJ", use_container_width=True):
-                    add_user("Empresarial/CNPJ")
-                    processar("2")
-                    st.rerun()
-
-        elif estado == "PLANO_SITUACAO":
-            situacoes = ["Reparadora", "Negativa Cirurgia", "Medicamento Negado", "Exame Negado", "Home Care", "Terapias", "Reajuste", "Coparticipação", "Erro Médico", "Outro"]
-            cols = st.columns(2)
-            for i, sit in enumerate(situacoes):
-                with cols[i % 2]:
-                    if st.button(sit, use_container_width=True):
-                        add_user(sit)
-                        processar(str(i+1))
-                        st.rerun()
-
-        elif estado == "PS_REP_Q2":
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("1️⃣ Sim, já atingi", use_container_width=True):
-                    add_user("Sim, já atingi")
-                    processar("1")
-                    st.rerun()
-            with col_b:
-                if st.button("2️⃣ Ainda não", use_container_width=True):
-                    add_user("Ainda não")
-                    processar("2")
-                    st.rerun()
-
-        elif estado == "PS_REP_Q5":
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("1️⃣ Sim", use_container_width=True):
-                    add_user("Sim")
-                    processar("1")
-                    st.rerun()
-            with col_b:
-                if st.button("2️⃣ Não", use_container_width=True):
-                    add_user("Não")
-                    processar("2")
-                    st.rerun()
-
-        elif estado == "PS_POS":
+        elif estado == "PS_BUSCA":
             options = ["1️⃣ Dúvida Cobertura", "2️⃣ Já Negativa", "3️⃣ Preventivo", "4️⃣ Consultoria"]
             cols = st.columns(2)
             for i, opt in enumerate(options):
@@ -894,7 +715,7 @@ def main():
                         processar(str(i+1))
                         st.rerun()
 
-        elif estado in ["PS_OP1", "PS_OP1_AGENDAMENTO", "PS_OP4"]:
+        elif estado in ["PS_OP1_PERGUNTA", "PS_OP1_DETALHES", "PS_OP4_PERGUNTA"]:
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("✅ SIM", use_container_width=True):
@@ -907,7 +728,7 @@ def main():
                     processar("NÃO")
                     st.rerun()
 
-        elif estado in ["PS_OP1_PAGAMENTO_METODO", "PS_OP4_PAGAMENTO_METODO"]:
+        elif estado in ["PS_OP1_PAGAMENTO", "PS_OP4_PAGAMENTO"]:
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("💳 Cartão de Crédito", use_container_width=True):
@@ -970,4 +791,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
