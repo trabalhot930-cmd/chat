@@ -1,14 +1,15 @@
 """
-Iara Bot - Assistente Jurídica em Direito da Saúde
+Aurora Bot - Assistente Jurídica em Direito da Saúde
 VERSÃO CORRIGIDA E COMPLETA
 """
 
 import streamlit as st
+import time
 
 # ============================================
 # CONFIGURAÇÕES
 # ============================================
-CALENDLY_LINK = "https://calendly.com/dra-lethicia"
+CALENDLY_LINK = "https://calendly.com/lethiciafernanda-adv-lxev/30min"
 L = "Dra. Lethicia Fernanda"
 
 LINK_CARTAO_97  = "https://www.asaas.com/c/oilhnffc7xyvc4n6"
@@ -17,7 +18,7 @@ LINK_CARTAO_500 = "https://www.asaas.com/c/apigp8m45tileghw"
 LINK_PIX_500    = "https://www.asaas.com/c/x1dfvyoajxnlgpp2"
 
 st.set_page_config(
-    page_title="Iara Bot - Assistente Jurídica",
+    page_title="Aurora Bot - Assistente Jurídica",
     page_icon="⚖️",
     layout="wide"
 )
@@ -84,12 +85,22 @@ def init_session():
         st.session_state.pergunta_idx = 0
     if "perguntas_ativas" not in st.session_state:
         st.session_state.perguntas_ativas = []
+    if "followup_time" not in st.session_state:
+        st.session_state.followup_time = None
+    if "finalizacao_time" not in st.session_state:
+        st.session_state.finalizacao_time = None
+    if "followup_sent" not in st.session_state:
+        st.session_state.followup_sent = False
+    if "finalizacao_sent" not in st.session_state:
+        st.session_state.finalizacao_sent = False
 
-def add_bot(msg):
+
+def add_bot(msg, delay=3):
     if msg:
         msg = msg.replace("{nome}", st.session_state.nome or "")
         msg = msg.replace("{lawyer}", L)
         msg = msg.replace("{CALENDLY_LINK}", CALENDLY_LINK)
+        time.sleep(delay)
         st.session_state.messages.append({"role": "bot", "content": msg})
 
 def add_user(msg):
@@ -106,7 +117,7 @@ def reset():
 
 MSG_BOAS_VINDAS = (
     "Olá, seja bem vindo(a). 🌟\n\n"
-    "Sou a Lara, assistente jurídica do escritório da Dra Lethicia Fernanda, "
+    "Sou a Aurora, assistente jurídica do escritório da Dra Lethicia Fernanda, "
     "advogada especialista em Direito da Saúde.\n\n"
     "**Fico feliz que você entrou em contato conosco.**\n\n"
     "Qual o seu nome?"
@@ -118,10 +129,10 @@ MSG_CANAL = "Olá, {nome}! Seu atendimento é pelo **SUS** ou por **Plano de Sa�
 # MENSAGENS DE VALORES (INTERCEPTAÇÃO)
 # ============================================
 MSG_VALORES_CIRURGIA = (
-    "Compreendo sua dúvida sobre o investimento. No meu escritório, nós não trabalhamos com valores iguais porque cada vida e cada urgência são únicas.\n\n"
-    "Como o seu caso envolve Cirurgia / Medicamento de Alto Custo / Home Care, estamos tratando de um cenário de alta complexidade técnica e risco direto à saúde. "
+    "Compreendo sua dúvida sobre o investimento. No nosso escritório, nós não trabalhamos com valores iguais porque cada vida e cada urgência são únicas.\n\n"
+    "Como o seu caso envolve uma vida, estamos tratando de um cenário de alta complexidade técnica e risco direto à saúde. "
     f"A {L} não define valores para casos de alta complexidade por mensagem de texto.\n\n"
-    "Para situações assim, é necessária uma Reunião Estratégica por vídeo (15 minutos). Nessa reunião, ela vai te apresentar o plano de ação para cercar o juiz e garantir que seu direito não seja negado, além de alinhar o investimento necessário para a condução do processo.\n\n"
+    "Para situações assim, é necessária uma Reunião de Viabilização Jurídica por vídeo (20 minutos). Nessa reunião, ela vai te apresentar o plano de ação para cercar o juiz e garantir que seu direito não seja negado, além de alinhar o investimento necessário para a condução do processo. Não se preocupe, essa reunião inicial é gratuita e totalmente on-line.\n\n"
     "Pra você marcar essa reunião, basta seguir com a nossa conversa, certo?!"
 )
 
@@ -402,9 +413,10 @@ PS_REP_NAO_PESO = (
 )
 PS_REP_EMPATIA = (
     "Eu entendo que essa pele que restou é o capítulo final de uma grande superação, mas ela também pode ser um peso físico e emocional. "
-    "Para eu desenhar a melhor estratégia para você, me conte um pouco..."
+    "Para eu desenhar a melhor estratégia para você, me conte um pouco...\n\n"
+    "Esse excesso de pele hoje te causa dores, assaduras ou dermatites que não curam? E além do corpo, como isso tem afetado a sua autoestima e a sua liberdade de movimento no dia a dia?"
 )
-PS_REP_Q3 = "Esse excesso de pele hoje te causa dores, assaduras ou dermatites que não curam? E além do corpo, como isso tem afetado a sua autoestima e a sua liberdade de movimento no dia a dia?"
+PS_REP_Q3 = PS_REP_EMPATIA  # alias – mantido para compatibilidade com o coletor
 PS_REP_Q4 = "Quais cirurgias reparadoras você teria interesse em fazer?"
 PS_REP_Q5 = "Certo... Você já chegou a ir no médico cirurgião plástico pra solicitar as reparadoras e emitir os laudos?"
 PS_REP_ACOMPANHAMENTO = (
@@ -429,7 +441,7 @@ PS_ENDO_Q5 = "Você já tentou resolver isso diretamente com o plano — ligaç�
 PS_BARI_Q1 = "Qual o seu IMC atual? Se não souber, pode me falar somente seu peso atual e sua altura"
 PS_BARI_Q2 = "Você tem comorbidades? (diabetes, hipertensão, apneia do sono, problemas nas articulações)"
 PS_BARI_Q3_MSG = "A cirurgia bariátrica nunca é apenas estética. É seu direito concluir esse ciclo com segurança e cobertura total pela operadora. Vou superar esses obstáculos contratuais para que seu procedimento seja autorizado 💙"
-PS_BARI_Q3 = "Fez o acompanhamento multidisciplinar exigido (nutricionista, psicólogo, endocrinologista)?\n\n1️⃣ Sim\n2️⃣ Não"
+PS_BARI_Q3 = PS_BARI_Q3_MSG + "\n\nFez o acompanhamento multidisciplinar exigido (nutricionista, psicólogo, endocrinologista)?"
 PS_BARI_Q4 = "O plano negou formalmente ou simplesmente não respondeu?"
 PS_BARI_Q5 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
 PS_BARI_Q6 = "Você já tentou resolver isso diretamente com o plano — ligação, protocolo, ouvidoria ou recurso formal?"
@@ -498,8 +510,8 @@ PS_MED_Q3  = "O fornecimento do medicamento foi negado?\n\n1️⃣ Sim\n2️⃣ 
 PS_MED_Q4  = "Eu sei que cada dia sem a medicação gera uma ansiedade enorme, afinal, a sua saúde não pode esperar o tempo do plano.\n\nHoje, a falta desse medicamento já está afetando o controle da sua doença ou causando sintomas que impedem sua rotina?"
 PS_MED_Q5  = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Alto custo\n3️⃣ Uso domiciliar\n4️⃣ Experimental/off-label\n5️⃣ Outro"
 PS_MED_Q6  = "Essa negativa do plano foi por escrita ou verbal?"
-PS_MED_Q7  = "Muitos pacientes desistem quando ouvem que o remédio 'não está no Rol' ou 'é domiciliar' ou 'experimental', mas a verdade é que a justiça entende que se o seu médico prescreveu, o plano é obrigado a fornecer."
-PS_MED_Q8  = "Você possui receita médica do medicamento?\n\n1️⃣ Sim\n2️⃣ Não"
+PS_MED_Q7  = "Muitos pacientes desistem quando ouvem que o remédio 'não está no Rol' ou 'é domiciliar' ou 'experimental', mas a verdade é que a justiça entende que se o seu médico prescreveu, o plano é obrigado a fornecer.\n\nVocê possui receita médica do medicamento?"
+PS_MED_Q8  = PS_MED_Q7  # Q8 merged into Q7
 PS_MED_Q9  = "Qual o valor aproximado do medicamento?"
 PS_MED_Q10 = "Você tem laudo médico explicando a necessidade do medicamento?\n\n1️⃣ Sim\n2️⃣ Não"
 
@@ -1113,14 +1125,9 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_ERRO_Q1)
 
-        else:  # OUTRO
-            st.session_state.perguntas_ativas = [
-                PS_OUTRO_DEMANDA_Q1, PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3,
-                PS_OUTRO_DEMANDA_Q4, PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6,
-                PS_OUTRO_DEMANDA_Q7
-            ]
-            st.session_state.pergunta_idx = 0
-            st.session_state.estado = "PS_PERGUNTAS_COLETOR"
+        else:  # OUTRO (10)
+            dados["situacao"] = "outro"
+            st.session_state.estado = "PS_OUTRO_DEMANDA"
             add_bot(PS_OUTRO_DEMANDA_Q1)
 
     # Coletor genérico
@@ -1132,9 +1139,17 @@ def processar(resposta: str):
         if idx < len(st.session_state.perguntas_ativas):
             add_bot(st.session_state.perguntas_ativas[idx])
         else:
+            # Enviar mensagem "ponto crítico" antes de PS_POS_BUSCA
+            situacao_raw = dados.get("situacao", "")
+            situacao_n = _n(situacao_raw)
+            ponto = dados.get("neg_cir_esp", situacao_raw) or situacao_raw
+            add_bot(
+                f"Com base no que você me relatou, o seu caso é uma prioridade, especialmente por envolver *{ponto}*. "
+                "Pela minha experiência em Direito da Saúde, vejo que temos fundamentos sólidos para agir, "
+                "pois o contrato deve proteger sua vida e não criar barreiras desnecessárias."
+            )
             # Para negativa de cirurgia, adicionar pergunta sobre material
-            situacao = _n(dados.get("situacao", ""))
-            if "negativa" in situacao or "2" == dados.get("situacao", "").strip():
+            if "negativa" in situacao_n or "2" == situacao_raw.strip():
                 st.session_state.estado = "PS_NEG_MATERIAL"
                 add_bot(MSG_NEG_MATERIAL)
             else:
@@ -1148,11 +1163,23 @@ def processar(resposta: str):
         add_bot(PS_REP_Q2)
     elif estado == "PS_REP_Q2":
         if "ainda" in _n(resposta) or "2" in resposta:
-            st.session_state.estado = "PS_REP_NAO_PESO"
-            add_bot(PS_REP_NAO_PESO)
+            st.session_state.estado = "PS_REP_FALTAM_KG"
+            add_bot("Faltam quantos kg pra você chegar a sua meta?")
         else:
             st.session_state.estado = "PS_REP_EMPATIA"
             add_bot(PS_REP_EMPATIA)
+    elif estado == "PS_REP_FALTAM_KG":
+        # Extract number from response
+        import re
+        nums = re.findall(r'\d+', resposta)
+        kg = int(nums[0]) if nums else 10
+        if kg <= 5:
+            # Treat as if already reached goal
+            st.session_state.estado = "PS_REP_EMPATIA"
+            add_bot(PS_REP_EMPATIA)
+        else:
+            st.session_state.estado = "PS_REP_NAO_PESO"
+            add_bot(PS_REP_NAO_PESO)
     elif estado == "PS_REP_NAO_PESO":
         if _sim(resposta):
             add_bot(f"Ótimo! Agende sua consulta: {CALENDLY_LINK}")
@@ -1160,9 +1187,6 @@ def processar(resposta: str):
             add_bot(PS_ENCERRAMENTO)
         st.session_state.estado = "FIM"
     elif estado == "PS_REP_EMPATIA":
-        st.session_state.estado = "PS_REP_Q3"
-        add_bot(PS_REP_Q3)
-    elif estado == "PS_REP_Q3":
         dados["rep_q3"] = resposta
         st.session_state.estado = "PS_REP_Q4"
         add_bot(PS_REP_Q4)
@@ -1213,6 +1237,30 @@ def processar(resposta: str):
         st.session_state.pergunta_idx = 0
         st.session_state.estado = "PS_PERGUNTAS_COLETOR"
         add_bot(st.session_state.perguntas_ativas[0])
+
+    # ---- OUTRO (plano) ----
+    elif estado == "PS_OUTRO_DEMANDA":
+        idx = st.session_state.get("outro_idx", 0)
+        dados[f"outro_{idx}"] = resposta
+        idx += 1
+        st.session_state.outro_idx = idx
+        outro_qs = [
+            PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
+            PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
+        ]
+        if idx < len(outro_qs) + 1:
+            q = outro_qs[idx - 1] if idx - 1 < len(outro_qs) else None
+            if q:
+                add_bot(q)
+                if q == PS_OUTRO_DEMANDA_Q7:
+                    st.session_state.estado = "PS_OUTRO_DEMANDA_FIM"
+        else:
+            st.session_state.estado = "PS_POS_BUSCA"
+            add_bot(PS_POS_BUSCA)
+
+    elif estado == "PS_OUTRO_DEMANDA_FIM":
+        st.session_state.estado = "PS_POS_BUSCA"
+        add_bot(PS_POS_BUSCA)
 
     # ---- NEGATIVA DE MATERIAL ----
     elif estado == "PS_NEG_MATERIAL":
@@ -1294,26 +1342,25 @@ def processar(resposta: str):
         n = _n(resposta)
         if "sozinho" in n or "sozinha" in n or "não" in n or "nao" in n:
             add_bot(DECISAO_NAO)
-            add_bot(MSG_FOLLOWUP_LINK)
-            add_bot(MSG_AGENDAMENTO_FINALIZADO)
-            st.session_state.estado = "FIM"
         elif "repasse" in n or "passo" in n or "falar" in n or "3" in resposta:
             add_bot(DECISAO_REPASSE)
             st.session_state.estado = "DECISAO_REPASSE_RESPOSTA"
+            return
         else:
             add_bot(DECISAO_SIM)
-            add_bot(MSG_FOLLOWUP_LINK)
-            add_bot(MSG_AGENDAMENTO_FINALIZADO)
-            st.session_state.estado = "FIM"
+        # Schedule timed messages
+        st.session_state.followup_time = time.time() + 600  # 10 min
+        st.session_state.finalizacao_time = st.session_state.followup_time + 300  # +5 min
+        st.session_state.estado = "AGUARDANDO_TIMED"
 
     elif estado == "DECISAO_REPASSE_RESPOSTA":
         if _sim(resposta) or "com ele" in _n(resposta):
             add_bot(DECISAO_REPASSE_SIM)
         else:
             add_bot(DECISAO_REPASSE_NAO)
-        add_bot(MSG_FOLLOWUP_LINK)
-        add_bot(MSG_AGENDAMENTO_FINALIZADO)
-        st.session_state.estado = "FIM"
+        st.session_state.followup_time = time.time() + 600
+        st.session_state.finalizacao_time = st.session_state.followup_time + 300
+        st.session_state.estado = "AGUARDANDO_TIMED"
 
     elif estado == "FIM":
         pass
@@ -1324,10 +1371,27 @@ def processar(resposta: str):
 # ============================================
 
 def main():
-    st.title("⚖️ Iara Bot - Assistente Jurídica em Direito da Saúde")
+    st.title("⚖️ Aurora Bot - Assistente Jurídica em Direito da Saúde")
     st.caption(f"Especialista: {L} | Atendimento: SUS, Planos de Saúde")
 
     init_session()
+
+    # ---- CHECK TIMED MESSAGES ----
+    now = time.time()
+    rerun_timed = False
+    if st.session_state.followup_time and not st.session_state.followup_sent:
+        if now >= st.session_state.followup_time:
+            st.session_state.messages.append({"role": "bot", "content": MSG_FOLLOWUP_LINK})
+            st.session_state.followup_sent = True
+            rerun_timed = True
+    if st.session_state.finalizacao_time and not st.session_state.finalizacao_sent:
+        if now >= st.session_state.finalizacao_time:
+            st.session_state.messages.append({"role": "bot", "content": MSG_AGENDAMENTO_FINALIZADO})
+            st.session_state.finalizacao_sent = True
+            st.session_state.estado = "FIM"
+            rerun_timed = True
+    if rerun_timed:
+        st.rerun()
 
     with st.sidebar:
         st.markdown("### 📋 Informações da Sessão")
@@ -1342,217 +1406,235 @@ def main():
             reset()
             st.rerun()
 
-    col1, col2 = st.columns([3, 1])
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    for msg in st.session_state.messages:
+        if msg["role"] == "bot":
+            st.markdown(
+                f'<div class="chat-message bot-message"><strong>🤖 Aurora:</strong><br>{msg["content"]}</div>',
+                unsafe_allow_html=True
+            )
+        else:
+            nome = st.session_state.nome or "Você"
+            st.markdown(
+                f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{msg["content"]}</div>',
+                unsafe_allow_html=True
+            )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    with col1:
-        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-        for msg in st.session_state.messages:
-            if msg["role"] == "bot":
-                st.markdown(
-                    f'<div class="chat-message bot-message"><strong>🤖 Lara:</strong><br>{msg["content"]}</div>',
-                    unsafe_allow_html=True
-                )
-            else:
-                nome = st.session_state.nome or "Você"
-                st.markdown(
-                    f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{msg["content"]}</div>',
-                    unsafe_allow_html=True
-                )
-        st.markdown('</div>', unsafe_allow_html=True)
+    # ---- BOTÕES CONTEXTUAIS (abaixo do chat) ----
+    estado = st.session_state.estado
 
-        user_input = st.text_input(
-            "Digite sua mensagem:",
-            key="user_input",
-            placeholder="Digite aqui sua resposta..."
-        )
-
-        if st.button("📤 Enviar", use_container_width=True) and user_input:
-            add_user(user_input)
-            processar(user_input)
+    def btn(label, valor=None):
+        v = valor or label
+        if st.button(label, use_container_width=False, key=f"btn_{label}_{v}"):
+            add_user(v)
+            processar(v)
             st.rerun()
 
-    # ---- BOTÕES CONTEXTUAIS ----
-    with col2:
-        estado = st.session_state.estado
-
-        def btn(label, valor=None):
-            v = valor or label
-            if st.button(label, use_container_width=True):
-                add_user(v)
-                processar(v)
-                st.rerun()
-
+    def show_buttons():
         if estado == "CANAL":
-            btn("🏥 SUS", "SUS")
-            btn("📋 Plano de Saúde", "Plano de Saúde")
+            c1, c2 = st.columns(2)
+            with c1: btn("🏥 SUS", "SUS")
+            with c2: btn("📋 Plano de Saúde", "Plano de Saúde")
 
         elif estado == "SUS_DEMANDA":
-            btn("🔪 Cirurgia / Tratamento", "Cirurgia")
-            btn("📋 Consultas / Exames", "Consultas")
+            c1, c2 = st.columns(2)
+            with c1: btn("🔪 Cirurgia / Tratamento", "Cirurgia")
+            with c2: btn("📋 Consultas / Exames", "Consultas")
 
         elif estado == "SUS_CONSULTA_EXAME_TIPO":
-            btn("1️⃣ Consulta com especialista", "1")
-            btn("2️⃣ Realização de Exame", "2")
+            c1, c2 = st.columns(2)
+            with c1: btn("1️⃣ Consulta com especialista", "1")
+            with c2: btn("2️⃣ Realização de Exame", "2")
 
         elif estado == "SUS_CONSULTA_PITCH":
-            btn("⏳ Quero aguardar", "aguardar")
-            btn("💙 Quero ajuda da Dra. Lethicia", "quero ajuda")
+            c1, c2 = st.columns(2)
+            with c1: btn("⏳ Quero aguardar", "aguardar")
+            with c2: btn("💙 Quero ajuda da Dra. Lethicia", "quero ajuda")
 
-        elif estado == "SUS_CONSULTA_AJUDA_Q3":
-            btn("✅ Sim", "Sim")
-            btn("❌ Não", "Não")
+        elif estado in ("SUS_CONSULTA_AJUDA_Q3", "SUS_CONSULTA_AJUDA_Q4B", "SUS_CONSULTA_Q3"):
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ Sim", "Sim")
+            with c2: btn("❌ Não", "Não")
 
         elif estado == "SUS_CONSULTA_AJUDA_Q4":
-            btn("📱 Tenho Meu SUS", "Tenho Meu SUS")
-            btn("📄 Tenho Comprovante", "Tenho Comprovante")
-            btn("📋 Tenho SISREG", "Tenho SISREG")
+            c1, c2, c3 = st.columns(3)
+            with c1: btn("📱 Tenho Meu SUS", "Tenho Meu SUS")
+            with c2: btn("📄 Tenho Comprovante", "Tenho Comprovante")
+            with c3: btn("📋 Tenho SISREG", "Tenho SISREG")
 
-        elif estado == "SUS_CONSULTA_AJUDA_Q4B":
-            btn("✅ Sim", "Sim")
-            btn("❌ Não", "Não")
-
-        elif estado in ("SUS_CONSULTA_PROTOCOLO", "SUS_EXAME_PROTOCOLO"):
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
-
-        elif estado in ("SUS_CONSULTA_HONORARIOS", "SUS_EXAME_HONORARIOS"):
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
+        elif estado in ("SUS_CONSULTA_PROTOCOLO", "SUS_EXAME_PROTOCOLO",
+                        "SUS_CONSULTA_HONORARIOS", "SUS_EXAME_HONORARIOS",
+                        "POS_PERGUNTAS_SUS", "PROPOSTA_SUS", "HONORARIOS_SUS"):
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ SIM", "SIM")
+            with c2: btn("❌ NÃO", "NÃO")
 
         elif estado == "SUS_EXAME_TIPO":
-            btn("1️⃣ Diagnóstico", "1")
-            btn("2️⃣ Pré-operatório", "2")
-            btn("3️⃣ Confirmação", "3")
+            c1, c2, c3 = st.columns(3)
+            with c1: btn("1️⃣ Diagnóstico", "1")
+            with c2: btn("2️⃣ Pré-operatório", "2")
+            with c3: btn("3️⃣ Confirmação", "3")
 
         elif estado == "SUS_EXAME_PITCH":
-            btn("⏳ Quero aguardar", "aguardar")
-            btn("💙 Quero ajuda da Dra. Lethicia", "quero ajuda")
+            c1, c2 = st.columns(2)
+            with c1: btn("⏳ Quero aguardar", "aguardar")
+            with c2: btn("💙 Quero ajuda da Dra. Lethicia", "quero ajuda")
 
         elif estado == "SUS_ESPECIALIDADE":
-            for esp in ["Oncologia", "Neurodivergências (TEA, TDAH)", "Endometriose / Adenomiose",
-                        "Medicamento", "Bariátrica", "Neurologia / Neurocirurgia", "Cardiologia", "Outros"]:
-                btn(esp)
+            cols = st.columns(4)
+            esps = ["Oncologia", "Neurodivergências (TEA, TDAH)", "Endometriose / Adenomiose",
+                    "Medicamento", "Bariátrica", "Neurologia / Neurocirurgia", "Cardiologia", "Outros"]
+            for i, esp in enumerate(esps):
+                with cols[i % 4]: btn(esp)
 
-        elif estado in ("POS_PERGUNTAS_SUS", "PROPOSTA_SUS"):
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
-
-        elif estado == "HONORARIOS_SUS":
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
-
-        elif estado == "SUS_ONCOLOGIA_Q1":
-            btn("Maligno", "Maligno")
-            btn("Benigno", "Benigno")
-
-        elif estado == "SUS_ONCOLOGIA_BENIGNO_MALIGNO":
-            btn("🔴 Maligno", "Maligno")
-            btn("🟢 Benigno", "Benigno")
+        elif estado in ("SUS_ONCOLOGIA_BENIGNO_MALIGNO", "SUS_ONCOLOGIA_Q1"):
+            c1, c2 = st.columns(2)
+            with c1: btn("🔴 Maligno", "Maligno")
+            with c2: btn("🟢 Benigno", "Benigno")
 
         elif estado == "SUS_DOCS_INSUF":
-            btn("✅ Certo", "Certo")
-            btn("👍 Vou fazer isso", "Vou fazer isso")
-
-        elif estado == "PS_TEMPO":
-            btn("1️⃣ Sim", "Sim")
-            btn("2️⃣ Não", "Não")
-
-        elif estado == "PS_SITUACAO":
-            opcoes = [
-                ("1️⃣ Reparadora", "1"),
-                ("2️⃣ Negativa de cirurgia", "2"),
-                ("3️⃣ Medicamento negado", "3"),
-                ("4️⃣ Exame negado", "4"),
-                ("5️⃣ Home care", "5"),
-                ("6️⃣ Terapias", "6"),
-                ("7️⃣ Reajuste", "7"),
-                ("8️⃣ Coparticipação elevada", "8"),
-                ("9️⃣ Erro médico", "9"),
-                ("🔟 OUTRO", "10"),
-            ]
-            for label, val in opcoes:
-                btn(label, val)
-
-        elif estado == "PS_REP_Q2":
-            btn("1️⃣ Já cheguei à minha meta", "1")
-            btn("2️⃣ Ainda não", "2")
-
-        elif estado == "PS_REP_NAO_PESO":
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
-
-        elif estado == "PS_REP_Q5":
-            btn("✅ Sim", "Sim")
-            btn("❌ Não", "Não")
-
-        elif estado == "PS_REP_ACOMPANHAMENTO":
-            btn("💙 Quero acompanhamento da Dra.", "quero acompanhamento")
-            btn("👤 Quero tentar sozinho(a)", "quero tentar sozinho")
-
-        elif estado == "PS_NEG_CIR_ESP":
-            for label, val in [
-                ("1️⃣ Endometriose", "1"),
-                ("2️⃣ Bariátrica", "2"),
-                ("3️⃣ Oncologia (câncer)", "3"),
-                ("4️⃣ Cardiologia", "4"),
-                ("5️⃣ Neurocirurgia", "5"),
-                ("6️⃣ Ortopedia", "6"),
-                ("7️⃣ Oftalmologia", "7"),
-                ("8️⃣ OUTRO", "8"),
-            ]:
-                btn(label, val)
-
-        elif estado == "SUS_CONSULTA_Q3":
-            btn("✅ Sim", "Sim")
-            btn("❌ Não", "Não")
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ Certo", "Certo")
+            with c2: btn("👍 Vou fazer isso", "Vou fazer isso")
 
         elif estado == "SUS_PERGUNTAS":
-            # Show Sim/Nao buttons for questions that need it
             idx = st.session_state.pergunta_idx
             perguntas = st.session_state.perguntas_ativas
             if idx < len(perguntas):
                 q = perguntas[idx].lower()
-                if any(kw in q for kw in ["tem relatório", "possui relatório", "tem o comprovante", "possui o comprovante",
-                                           "risco de piora", "agravamento", "diagnóstico confirmado", "tem laudo",
-                                           "possui laudo", "tem a receita", "tem algum laudo", "urgente"]):
-                    btn("✅ Sim", "Sim")
-                    btn("❌ Não", "Não")
+                if any(kw in q for kw in ["tem relatório", "possui relatório", "tem o comprovante",
+                                           "possui o comprovante", "risco de piora", "agravamento",
+                                           "diagnóstico confirmado", "tem laudo", "possui laudo",
+                                           "tem a receita", "tem algum laudo", "urgente",
+                                           "já foi encaminhado", "já tem mais", "60 dias"]):
+                    c1, c2 = st.columns(2)
+                    with c1: btn("✅ Sim", "Sim")
+                    with c2: btn("❌ Não", "Não")
+
+        elif estado == "PS_TEMPO":
+            c1, c2 = st.columns(2)
+            with c1: btn("1️⃣ Sim", "Sim")
+            with c2: btn("2️⃣ Não", "Não")
+
+        elif estado == "PS_SITUACAO":
+            opcoes = [
+                ("1️⃣ Reparadora", "1"), ("2️⃣ Negativa de cirurgia", "2"),
+                ("3️⃣ Medicamento negado", "3"), ("4️⃣ Exame negado", "4"),
+                ("5️⃣ Home care", "5"), ("6️⃣ Terapias", "6"),
+                ("7️⃣ Reajuste", "7"), ("8️⃣ Coparticipação elevada", "8"),
+                ("9️⃣ Erro médico", "9"), ("🔟 OUTRO", "10"),
+            ]
+            cols = st.columns(2)
+            for i, (label, val) in enumerate(opcoes):
+                with cols[i % 2]: btn(label, val)
+
+        elif estado == "PS_REP_Q2":
+            c1, c2 = st.columns(2)
+            with c1: btn("1️⃣ Já cheguei à minha meta", "1")
+            with c2: btn("2️⃣ Ainda não", "2")
+
+        elif estado in ("PS_REP_NAO_PESO", "PS_REP_Q5"):
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ SIM", "SIM")
+            with c2: btn("❌ NÃO", "NÃO")
+
+        elif estado in ("PS_REP_ACOMPANHAMENTO", "PS_OP3_PERMISSAO"):
+            c1, c2 = st.columns(2)
+            with c1: btn("💙 Quero acompanhamento da Dra.", "quero acompanhamento")
+            with c2: btn("👤 Quero tentar sozinho(a)", "quero tentar sozinho")
+
+        elif estado == "PS_NEG_CIR_ESP":
+            opcoes = [
+                ("1️⃣ Endometriose", "1"), ("2️⃣ Bariátrica", "2"),
+                ("3️⃣ Oncologia (câncer)", "3"), ("4️⃣ Cardiologia", "4"),
+                ("5️⃣ Neurocirurgia", "5"), ("6️⃣ Ortopedia", "6"),
+                ("7️⃣ Oftalmologia", "7"), ("8️⃣ OUTRO", "8"),
+            ]
+            cols = st.columns(2)
+            for i, (label, val) in enumerate(opcoes):
+                with cols[i % 2]: btn(label, val)
 
         elif estado == "PS_NEG_MATERIAL":
-            btn("🔪 Cirurgia negada", "Cirurgia negada")
-            btn("🔩 Material negado", "Material negado")
-            btn("➖ Não se aplica", "Não se aplica")
+            c1, c2, c3 = st.columns(3)
+            with c1: btn("🔪 Cirurgia negada", "Cirurgia negada")
+            with c2: btn("🔩 Material negado", "Material negado")
+            with c3: btn("➖ Não se aplica", "Não se aplica")
 
         elif estado in ("PS_OP1_PERGUNTA", "PS_OP1_DETALHES"):
-            btn("✅ SIM", "SIM")
-            btn("❌ NÃO", "NÃO")
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ SIM", "SIM")
+            with c2: btn("❌ NÃO", "NÃO")
 
         elif estado == "PS_OP4_PERGUNTA":
-            btn("✅ Sim, quero agendar agora", "SIM")
-            btn("❌ Não quero, mas obrigada", "NÃO")
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ Sim, quero agendar agora", "SIM")
+            with c2: btn("❌ Não quero, mas obrigada", "NÃO")
 
         elif estado in ("PS_OP1_PAGAMENTO", "PS_OP4_PAGAMENTO"):
-            btn("💳 Cartão de Crédito", "cartão")
-            btn("📱 Pix", "pix")
+            c1, c2 = st.columns(2)
+            with c1: btn("💳 Cartão de Crédito", "cartão")
+            with c2: btn("📱 Pix", "pix")
 
         elif estado == "PS_POS_BUSCA":
-            btn("1️⃣ Entender meus direitos", "1")
-            btn("2️⃣ Já tenho a negativa", "2")
-            btn("3️⃣ Me preparar antes da negativa", "3")
-            btn("4️⃣ Consultoria jurídica", "4")
-
-        elif estado == "PS_OP3_PERMISSAO":
-            btn("💙 Quero acompanhamento da Dra.", "quero acompanhamento")
-            btn("👤 Quero tentar sozinho(a)", "quero tentar sozinho")
+            opcoes = [
+                ("1️⃣ Entender meus direitos", "1"),
+                ("2️⃣ Já tenho a negativa", "2"),
+                ("3️⃣ Me preparar antes da negativa", "3"),
+                ("4️⃣ Consultoria jurídica", "4"),
+            ]
+            cols = st.columns(2)
+            for i, (label, val) in enumerate(opcoes):
+                with cols[i % 2]: btn(label, val)
 
         elif estado == "DECISAO_COMPARTILHADA":
-            btn("👨‍👩‍👧 Sim, meu cônjuge/familiar", "sim")
-            btn("👤 Não, eu decido sozinho(a)", "sozinho")
-            btn("📞 Tem, mas pode falar comigo", "repasse")
+            c1, c2, c3 = st.columns(3)
+            with c1: btn("👨‍👩‍👧 Sim, meu cônjuge/familiar", "sim")
+            with c2: btn("👤 Não, eu decido sozinho(a)", "sozinho")
+            with c3: btn("📞 Tem, mas pode falar comigo", "repasse")
 
         elif estado == "DECISAO_REPASSE_RESPOSTA":
-            btn("👥 Com ele(a)", "com ele")
-            btn("👤 Entre nós", "não")
+            c1, c2 = st.columns(2)
+            with c1: btn("👥 Com ele(a)", "com ele")
+            with c2: btn("👤 Entre nós", "não")
+
+        elif estado == "PS_OUTRO_DEMANDA":
+            idx = st.session_state.get("outro_idx", 0)
+            outro_qs = [PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
+                        PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6]
+            if idx > 0 and idx - 1 < len(outro_qs):
+                q = outro_qs[idx - 1]
+                if "1️⃣ Sim" in q or "Sim\n2️⃣ Não" in q:
+                    c1, c2, c3 = st.columns(3)
+                    with c1: btn("✅ Sim", "Sim")
+                    with c2: btn("❌ Não", "Não")
+                    with c3: btn("➖ Não se aplica", "Não se aplica")
+
+        elif estado == "PS_PERGUNTAS_COLETOR":
+            idx = st.session_state.pergunta_idx
+            perguntas = st.session_state.perguntas_ativas
+            if idx < len(perguntas):
+                q = perguntas[idx].lower()
+                if any(kw in q for kw in ["1️⃣ sim", "sim\n2️⃣ não", "você possui", "tem laudo",
+                                           "tem exames", "tem o laudo", "multidisciplinar",
+                                           "foi negado", "urgente", "receita médica"]):
+                    c1, c2 = st.columns(2)
+                    with c1: btn("✅ Sim", "Sim")
+                    with c2: btn("❌ Não", "Não")
+
+    show_buttons()
+
+    st.markdown("---")
+    user_input = st.text_input(
+        "Digite sua mensagem:",
+        key="user_input",
+        placeholder="Digite aqui sua resposta..."
+    )
+
+    if st.button("📤 Enviar", use_container_width=True) and user_input:
+        add_user(user_input)
+        processar(user_input)
+        st.rerun()
 
     if not st.session_state.messages:
         add_bot(MSG_BOAS_VINDAS)
