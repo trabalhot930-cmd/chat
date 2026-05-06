@@ -505,9 +505,9 @@ PS_NAO_2ANOS_APOIO = (
 )
 PS_NAO_2ANOS_Q2 = "No seu caso, o médico comentou se isso é urgente ou pode trazer algum risco se não for feito?"
 PS_NAO_2ANOS_FEEDBACK = (
-    "Perfeito, isso é importante 👍\n"
+    "Perfeito, isso é importante \n"
     "SE HÁ URGÊNCIA, o plano já deveria cobrir normalmente esse tipo de situação.\n"
-    "Mesmo assim, eles podem acabar negando indevidamente em alguns casos."
+    "Mesmo assim, eles podem acabar negando indevidamente em alguns casos.Isso aconteceu com você?"
 )
 PS_NAO_2ANOS_Q3 = "O médico indicou que o tratamento é urgente?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_NAO_2ANOS_Q4 = "Você já sabia dessa doença antes de contratar o plano?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Descobri depois"
