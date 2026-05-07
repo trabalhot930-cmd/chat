@@ -73,6 +73,22 @@ def _n(r: str) -> str:
 def _sim(r: str) -> bool:
     return any(p in _n(r) for p in ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo"])
 
+def _opcao_numero(r: str):
+    """Extrai opção numérica escolhida por botão/texto.
+
+    A tela principal de Plano de Saúde agora usa opções de 0 a 9:
+    0=Reparadora, 1=Negativa de cirurgia, ..., 9=OUTRO.
+    """
+    texto = _n(r)
+    # botão do Streamlit envia exatamente '0', '1', ..., '9'
+    if texto in {str(i) for i in range(0, 10)}:
+        return texto
+    # aceita emojis/formatos como 0️⃣, 9️⃣, opção 9
+    if "outro" in texto or re.search(r"\b9\b", texto) or "9️⃣" in texto:
+        return "9"
+    m = re.search(r"(?:^|\b)([0-8])(?:\b|️⃣)", texto)
+    return m.group(1) if m else None
+
 def init_session():
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -509,9 +525,16 @@ PS_NAO_2ANOS_Q6 = "A negativa foi por escrito ou verbal, por telefone/balcão de
 
 PS_SITUACAO = (
     "Para que eu possa te direcionar corretamente, qual é a sua situação atual com o plano de saúde?\n\n"
-    "1️⃣ Reparadora\n2️⃣ Negativa de cirurgia\n3️⃣ Medicamento negado\n4️⃣ Exame negado\n"
-    "5️⃣ Home care\n6️⃣ Terapias (fono, ABA, fisio, psicopedagogia...)\n7️⃣ Reajuste\n"
-    "8️⃣ Coparticipação elevada\n9️⃣ Erro médico\n🔟 OUTRO"
+    "0️⃣ Reparadora\n"
+    "1️⃣ Negativa de cirurgia\n"
+    "2️⃣ Medicamento negado\n"
+    "3️⃣ Exame negado\n"
+    "4️⃣ Home care\n"
+    "5️⃣ Terapias (Fono, ABA, Fisio, Psicopedagogia...)\n"
+    "6️⃣ Reajuste\n"
+    "7️⃣ Coparticipação elevada\n"
+    "8️⃣ Erro médico\n"
+    "9️⃣ OUTRO"
 )
 
 # ============================================
@@ -1238,16 +1261,31 @@ def processar(resposta: str):
     # Caminho SIM - Situação
     elif estado == "PS_SITUACAO":
         dados["situacao"] = resposta
+        resp_n = _n(resposta)
+        opcao = _opcao_numero(resposta)
 
-        if "reparadora" in _n(resposta) or "1" in resposta:
+        # Nova numeração da pergunta principal de Plano de Saúde:
+        # 0 Reparadora | 1 Negativa de cirurgia | 2 Medicamento | 3 Exame |
+        # 4 Home care | 5 Terapias | 6 Reajuste | 7 Coparticipação |
+        # 8 Erro médico | 9 OUTRO
+        if opcao == "9" or "outro" in resp_n:
+            dados["situacao"] = "outro"
+            st.session_state.estado = "PS_OUTRO_DEMANDA"
+            st.session_state.outro_idx = 0
+            add_bot(PS_OUTRO_DEMANDA_Q1)
+
+        elif opcao == "0" or "reparadora" in resp_n:
+            dados["situacao"] = "reparadora"
             st.session_state.estado = "PS_REP_Q1"
             add_bot(PS_REP_Q1)
 
-        elif "negativa" in _n(resposta) or "2" in resposta:
+        elif opcao == "1" or "negativa" in resp_n:
+            dados["situacao"] = "negativa de cirurgia"
             st.session_state.estado = "PS_NEG_CIR_ESP"
             add_bot(PS_NEG_CIR_ESP)
 
-        elif "medicamento" in _n(resposta) or "3" in resposta:
+        elif opcao == "2" or "medicamento" in resp_n:
+            dados["situacao"] = "medicamento negado"
             st.session_state.perguntas_ativas = [
                 PS_MED_Q1, PS_MED_Q2, PS_MED_Q3, PS_MED_Q4, PS_MED_Q5,
                 PS_MED_Q6, PS_MED_Q7, PS_MED_Q9, PS_MED_Q10
@@ -1256,7 +1294,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_MED_Q1)
 
-        elif "exame" in _n(resposta) or "4" in resposta:
+        elif opcao == "3" or "exame" in resp_n:
+            dados["situacao"] = "exame negado"
             st.session_state.perguntas_ativas = [
                 PS_EXAME_Q1, PS_EXAME_Q2, PS_EXAME_Q3_E_Q4,
                 PS_EXAME_Q5, PS_EXAME_Q6, PS_EXAME_Q7
@@ -1265,7 +1304,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_EXAME_Q1)
 
-        elif "home" in _n(resposta) or "5" in resposta:
+        elif opcao == "4" or "home" in resp_n:
+            dados["situacao"] = "home care"
             st.session_state.perguntas_ativas = [
                 PS_HOME_Q1, PS_HOME_Q2, PS_HOME_Q3, PS_HOME_Q4,
                 PS_HOME_Q5, PS_HOME_Q6, PS_HOME_Q7
@@ -1274,7 +1314,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_HOME_Q1)
 
-        elif "terapia" in _n(resposta) or "6" in resposta:
+        elif opcao == "5" or "terapia" in resp_n:
+            dados["situacao"] = "terapias"
             st.session_state.perguntas_ativas = [
                 PS_TERA_Q1, PS_TERA_Q2, PS_TERA_Q3, PS_TERA_Q4,
                 PS_TERA_Q5, PS_TERA_Q6, PS_TERA_Q7
@@ -1283,7 +1324,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_TERA_Q1)
 
-        elif "reajuste" in _n(resposta) or "7" in resposta:
+        elif opcao == "6" or "reajuste" in resp_n:
+            dados["situacao"] = "reajuste"
             st.session_state.perguntas_ativas = [
                 PS_REAJ_Q1, PS_REAJ_Q2, PS_REAJ_Q3, PS_REAJ_Q4,
                 PS_REAJ_Q5, PS_REAJ_Q6, PS_REAJ_Q7, PS_REAJ_Q8
@@ -1292,7 +1334,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_REAJ_Q1)
 
-        elif "copart" in _n(resposta) or "8" in resposta:
+        elif opcao == "7" or "copart" in resp_n:
+            dados["situacao"] = "coparticipação elevada"
             st.session_state.perguntas_ativas = [
                 PS_COPA_Q1, PS_COPA_Q2, PS_COPA_Q3, PS_COPA_Q4,
                 PS_COPA_Q5, PS_COPA_Q6, PS_COPA_Q7
@@ -1301,7 +1344,8 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_COPA_Q1)
 
-        elif "erro" in _n(resposta) or "9" in resposta:
+        elif opcao == "8" or "erro" in resp_n:
+            dados["situacao"] = "erro médico"
             st.session_state.perguntas_ativas = [
                 PS_ERRO_Q1, PS_ERRO_Q2, PS_ERRO_Q3,
                 PS_ERRO_Q4, PS_ERRO_Q5, PS_ERRO_Q6
@@ -1310,7 +1354,7 @@ def processar(resposta: str):
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
             add_bot(PS_ERRO_Q1)
 
-        else:  # OUTRO (10) - FLUXO CORRIGIDO
+        else:
             dados["situacao"] = "outro"
             st.session_state.estado = "PS_OUTRO_DEMANDA"
             st.session_state.outro_idx = 0
@@ -1715,11 +1759,11 @@ def main():
 
         elif estado == "PS_SITUACAO":
             opcoes = [
-                ("1️⃣ Reparadora", "1"), ("2️⃣ Negativa de cirurgia", "2"),
-                ("3️⃣ Medicamento negado", "3"), ("4️⃣ Exame negado", "4"),
-                ("5️⃣ Home care", "5"), ("6️⃣ Terapias", "6"),
-                ("7️⃣ Reajuste", "7"), ("8️⃣ Coparticipação elevada", "8"),
-                ("9️⃣ Erro médico", "9"), ("🔟 OUTRO", "10"),
+                ("0️⃣ Reparadora", "0"), ("1️⃣ Negativa de cirurgia", "1"),
+                ("2️⃣ Medicamento negado", "2"), ("3️⃣ Exame negado", "3"),
+                ("4️⃣ Home care", "4"), ("5️⃣ Terapias", "5"),
+                ("6️⃣ Reajuste", "6"), ("7️⃣ Coparticipação elevada", "7"),
+                ("8️⃣ Erro médico", "8"), ("9️⃣ OUTRO", "9"),
             ]
             cols = st.columns(2)
             for i, (label, val) in enumerate(opcoes):
