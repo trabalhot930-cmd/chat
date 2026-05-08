@@ -1,4 +1,4 @@
-
+"""
 Aurora Bot - Assistente Jurídica em Direito da Saúde
 VERSÃO CORRIGIDA E COMPLETA COM NOVAS FUNCIONALIDADES
 """
