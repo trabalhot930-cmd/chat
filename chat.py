@@ -1,4 +1,4 @@
-"""
+
 Aurora Bot - Assistente Jurídica em Direito da Saúde
 VERSÃO CORRIGIDA E COMPLETA COM NOVAS FUNCIONALIDADES
 """
@@ -2197,6 +2197,36 @@ def main():
             processar(v)
             st.rerun()
 
+    def render_opcoes_numeradas(texto):
+        """
+        Cria botões automaticamente para perguntas que já trazem alternativas no texto
+        (ex.: 1️⃣ Sim / 2️⃣ Não / 3️⃣ Não sei).
+        Mantém perguntas abertas sem botões quando não houver alternativas numeradas.
+        """
+        texto = str(texto)
+        # Captura opções com emoji numérico, inclusive quando estão na mesma linha.
+        matches = list(re.finditer(r"([0-9]|10)️⃣\s*", texto))
+        opcoes = []
+        for i, m in enumerate(matches):
+            inicio = m.end()
+            fim = matches[i + 1].start() if i + 1 < len(matches) else len(texto)
+            rotulo = texto[inicio:fim].strip()
+            rotulo = re.sub(r"\s+", " ", rotulo).strip(" -–:.;")
+            if rotulo:
+                numero = m.group(1)
+                opcoes.append((f"{numero}️⃣ {rotulo}", rotulo))
+
+        if not opcoes:
+            return False
+
+        # Evita botões enormes quando a pergunta é explicativa e não uma escolha real.
+        opcoes = [(label[:120], valor[:120]) for label, valor in opcoes]
+        cols = st.columns(min(3, max(1, len(opcoes))))
+        for i, (label, valor) in enumerate(opcoes):
+            with cols[i % len(cols)]:
+                btn(label, valor)
+        return True
+
     def show_buttons():
         if estado == "CANAL":
             c1, c2 = st.columns(2)
@@ -2268,8 +2298,11 @@ def main():
             idx = st.session_state.pergunta_idx
             perguntas = st.session_state.perguntas_ativas
             if idx < len(perguntas):
-                q = perguntas[idx].lower()
-                if any(kw in q for kw in ["tem relatório", "possui relatório", "tem o comprovante",
+                pergunta_atual = perguntas[idx]
+                q = pergunta_atual.lower()
+                if render_opcoes_numeradas(pergunta_atual):
+                    pass
+                elif any(kw in q for kw in ["tem relatório", "possui relatório", "tem o comprovante",
                                            "possui o comprovante", "risco de piora", "agravamento",
                                            "diagnóstico confirmado", "tem laudo", "possui laudo",
                                            "tem a receita", "tem algum laudo", "urgente",
@@ -2470,17 +2503,12 @@ def main():
             idx = st.session_state.pergunta_idx
             perguntas = st.session_state.perguntas_ativas
             if idx < len(perguntas):
-                q = perguntas[idx].lower()
+                pergunta_atual = perguntas[idx]
+                q = pergunta_atual.lower()
 
-                # IMPORTANTE: perguntas de Oftalmologia abaixo NÃO devem exibir botões automáticos de Sim/Não.
-                # Elas já trazem 3 alternativas no próprio texto e devem ser respondidas pelo campo de mensagem.
-                perguntas_sem_botoes = [
-                    "a condição está afetando sua visão de forma significativa",
-                    "o médico indicou urgência, risco de perda de visão",
-                    "o que o seu médico lhe disse sobre a urgência deste resultado"
-                ]
-
-                if any(trecho in q for trecho in perguntas_sem_botoes):
+                # Regra geral: toda pergunta com alternativas numeradas deve virar botão,
+                # inclusive Oftalmologia, Exames, Home Care, Terapias, Reajuste, Coparticipação e Erro Médico.
+                if render_opcoes_numeradas(pergunta_atual):
                     pass
                 # Motivo da negativa: não exibir botões genéricos de Sim/Não.
                 # Exibir as 6 opções corretas do texto.
@@ -2520,9 +2548,9 @@ def main():
 
     st.markdown("---")
     user_input = st.text_input(
-        "Digite sua mensagem:",
+        "Digite sua mensagem apenas quando a pergunta for aberta:",
         key="user_input",
-        placeholder="Digite aqui sua resposta..."
+        placeholder="Use os botões quando eles aparecerem. Digite somente respostas abertas."
     )
 
     if st.button("📤 Enviar", use_container_width=True) and user_input:
