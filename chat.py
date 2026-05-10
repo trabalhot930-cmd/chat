@@ -1037,7 +1037,8 @@ PS_ERRO_Q7_ESTAGIO = "Sinto muito, de verdade, por tudo o que você passou (ou e
 PS_ERRO_INTRO_DOR = (
     "Eu sei que enfrentar as consequências de um erro médico é uma situação extremamente delicada e dolorosa. "
     "Muitas vezes, o que deveria ser um processo de cura acaba se tornando um trauma por negligência, imprudência ou falha técnica. "
-    "O meu papel aqui é garantir que a sua dor e os seus direitos não sejam ignorados."
+    "O meu papel aqui é garantir que a sua dor e os seus direitos não sejam ignorados. "
+    "Você sente que foi isso que aconteceu com você?"
 )
 
 PS_ERRO_ANALISE = (
@@ -1100,6 +1101,24 @@ PS_PROVA_SOCIAL_ORTO_A7 = """É muito frustrante ver o plano de saúde limitar o
 PS_PROVA_SOCIAL_OFTAL_A8 = """É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A8.PNG" alt='A8.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
 PS_PROVA_SOCIAL_ERRO_A14 = """Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A14.PNG" alt='A14.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
 PS_PROVA_SOCIAL_COPA_A13 = """É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A13.PNG" alt='A13.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+PS_PROVA_SOCIAL_MEDICAMENTO_A9 = """É revoltante saber que o seu tratamento depende de uma medicação que o plano deveria cobrir sem questionar. O custo desses medicamentos é proibitivo para a maioria das pessoas, mas o seu direito é garantido por lei. Veja como a Dra. Lethicia já ajudou outros pacientes a garantirem o fornecimento imediato de medicações de alto custo:
+
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A9.PNG" alt='A9.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_PROVA_SOCIAL_HOMECARE_A10 = """É uma situação exaustiva. Nenhuma família deveria ter que brigar com um plano de saúde enquanto cuida de alguém que ama em casa. Mas quero te mostrar que essa batalha tem solução. Veja o alívio dessas famílias que, com o apoio da Dra. Lethicia, garantiram a estrutura completa de Home Care que o plano tentou negar:
+
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A10.PNG" alt='A10.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_PROVA_SOCIAL_TEA_A11 = """É angustiante ver o tempo passar e o plano de saúde criar barreiras para o desenvolvimento do seu filho ou seu. Sabemos que cada dia sem a terapia correta conta muito. Mas não desanime! Veja o alívio de outras famílias que conseguiram, através da Dra. Lethicia, garantir o tratamento multidisciplinar completo, sem limites de sessões e com os profissionais especializados:
+
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A11.PNG" alt='A11.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_PROVA_SOCIAL_REAJUSTE_A12 = """Eu te entendo. É como se o plano estivesse te punindo por ficar mais velho ou simplesmente por precisar do serviço. Mas a boa notícia é que a Justiça não aceita esses aumentos sem uma justificativa real. Veja o resultado de quem decidiu não aceitar esse abuso e conseguiu baixar o valor do boleto com a ajuda da Dra. Lethicia:
+
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A12.PNG" alt='A12.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_PROVA_SOCIAL_REABILITACAO_A15_A26 = """É muito frustrante ver o plano de saúde limitar a sua recuperação justamente quando você mais precisa de continuidade. A fisioterapia é o que garante que você volte à sua rotina normal. Veja como a Dra. Lethicia já ajudou outros pacientes a garantirem o tratamento completo, sem limite de sessões e com o acompanhamento que o médico prescreveu:
+
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A15.PNG" alt='A15.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>
+<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A26.PNG" alt='A26.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
 
 
 PS_PONTO_CRITICO = (
@@ -2071,6 +2090,10 @@ def processar(resposta: str):
             dados["prova_social_copa_a13_enviada"] = True
             add_bot(PS_PROVA_SOCIAL_COPA_A13)
 
+        if pergunta_atual == PS_REAJ_Q3 and not dados.get("prova_social_reajuste_a12_enviada"):
+            dados["prova_social_reajuste_a12_enviada"] = True
+            add_bot(PS_PROVA_SOCIAL_REAJUSTE_A12)
+
         if idx == 3 and not dados.get("urgencia_plano_coletor_feita"):
             dados["urgencia_plano_coletor_feita"] = True
             proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
@@ -2120,10 +2143,8 @@ def processar(resposta: str):
             # Fluxo específico de Erro Médico: após responder sobre falha/descaso/técnica,
             # segue para escolha entre judicialização ou análise técnica.
             if "erro" in _n(dados.get("situacao", "")):
+                st.session_state.estado = "PS_ERRO_INTRO_AGUARDANDO"
                 add_bot(PS_ERRO_INTRO_DOR)
-                add_bot(PS_ERRO_ANALISE)
-                st.session_state.estado = "PS_ERRO_ESCOLHA"
-                add_bot(PS_ERRO_ESCOLHA)
                 return
 
             # Enviar mensagem "ponto crítico" usando nome da especialidade
@@ -2192,6 +2213,15 @@ def processar(resposta: str):
             add_bot(PS_COPA_ESCOLHA)
 
     # ---- ERRO MÉDICO: NOVO FLUXO APÓS PERGUNTA FINAL ----
+    elif estado == "PS_ERRO_INTRO_AGUARDANDO":
+        dados["erro_intro_resposta"] = resposta
+        if not dados.get("prova_social_erro_a14_enviada"):
+            dados["prova_social_erro_a14_enviada"] = True
+            add_bot(PS_PROVA_SOCIAL_ERRO_A14)
+        add_bot(PS_ERRO_ANALISE)
+        st.session_state.estado = "PS_ERRO_ESCOLHA"
+        add_bot(PS_ERRO_ESCOLHA)
+
     elif estado == "PS_ERRO_ESCOLHA":
         n = _n(resposta)
         opcao = _opcao_numero(resposta)
@@ -2448,6 +2478,19 @@ def processar(resposta: str):
             st.session_state.estado = "PS_NEG_MATERIAL"
             add_bot(MSG_NEG_MATERIAL)
         else:
+            if not dados.get("prova_social_plano_geral_enviada"):
+                dados["prova_social_plano_geral_enviada"] = True
+                situacao_atual = _n(dados.get("situacao", ""))
+                tipo_terapia = _n(dados.get("resp_0", "") + " " + dados.get("resp_1", ""))
+                if "medicamento" in situacao_atual:
+                    add_bot(PS_PROVA_SOCIAL_MEDICAMENTO_A9)
+                elif "home" in situacao_atual:
+                    add_bot(PS_PROVA_SOCIAL_HOMECARE_A10)
+                elif "terapia" in situacao_atual:
+                    if "reabilitação" in tipo_terapia or "reabilitacao" in tipo_terapia or "fisioterapia" in tipo_terapia or "físic" in tipo_terapia or "fisic" in tipo_terapia:
+                        add_bot(PS_PROVA_SOCIAL_REABILITACAO_A15_A26)
+                    else:
+                        add_bot(PS_PROVA_SOCIAL_TEA_A11)
             add_bot(MSG_PRE_POS_BUSCA_1)
             add_bot(MSG_PRE_POS_BUSCA_2)
             st.session_state.estado = "PS_POS_BUSCA"
