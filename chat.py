@@ -102,11 +102,13 @@ def _extrair_primeiro_numero(resposta: str):
 
 
 def tornar_links_clicaveis(texto: str) -> str:
-    """Transforma URLs simples em links clicáveis no Streamlit, preservando imagens HTML."""
+    """Transforma URLs comuns em links clicáveis, preservando imagens/marcadores."""
     if not texto:
         return texto
 
-    # Não mexe em URLs dentro de tags HTML, especialmente <img src="..."> ou <img src='...'>
+    if "[[IMAGE:" in texto:
+        return texto
+
     placeholders = []
 
     def guardar_tag(match):
@@ -115,26 +117,17 @@ def tornar_links_clicaveis(texto: str) -> str:
 
     texto = re.sub(r"<[^>]+>", guardar_tag, texto)
 
-    # Evita duplicar links markdown já existentes [texto](url)
-    markdown_links = []
-
-    def guardar_md(match):
-        markdown_links.append(match.group(0))
-        return f"__MD_LINK_PLACEHOLDER_{len(markdown_links)-1}__"
-
-    texto = re.sub(r"\[[^\]]+\]\(https?://[^\s)]+\)", guardar_md, texto)
-
-    url_pattern = re.compile(r"(?<!\()(?<!\])\bhttps?://[^\s<>\"]+")
+    url_pattern = re.compile(r'(?<!\()(?<!\])\bhttps?://[^\s<>\"]+')
 
     def repl_url(match):
         url = match.group(0).rstrip(".,);]")
         suffix = match.group(0)[len(url):]
+        # links de imagem não viram texto clicável
+        if url.lower().split("?")[0].endswith((".png", ".jpg", ".jpeg", ".webp", ".gif")):
+            return url + suffix
         return f'<a href="{url}" target="_blank">{url}</a>{suffix}'
 
     texto = url_pattern.sub(repl_url, texto)
-
-    for i, md in enumerate(markdown_links):
-        texto = texto.replace(f"__MD_LINK_PLACEHOLDER_{i}__", md)
 
     for i, tag in enumerate(placeholders):
         texto = texto.replace(f"__HTML_TAG_PLACEHOLDER_{i}__", tag)
@@ -1214,30 +1207,40 @@ PS_PONTO_CRITICO = (
 
 
 # Provas sociais por especialidade no SUS (marcadores de imagem)
-SUS_PROVA_SOCIAL_ONCO_A16 = """Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n
+SUS_PROVA_SOCIAL_ONCO_A16 = """Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG]]"""
-SUS_PROVA_SOCIAL_TEA_A17 = """No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG]]"""
+SUS_PROVA_SOCIAL_TEA_A17 = """No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG]]"""
-SUS_PROVA_SOCIAL_ENDO_A18 = """Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n
+Mas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG]]"""
-SUS_PROVA_SOCIAL_MED_A19 = """É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG]]"""
+SUS_PROVA_SOCIAL_ENDO_A18 = """Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG]]"""
-SUS_PROVA_SOCIAL_BARI_A20 = """Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n
+Antes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG]]"""
-SUS_PROVA_SOCIAL_NEURO_A21_A22 = """Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG]]"""
+SUS_PROVA_SOCIAL_MED_A19 = """É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG]]\n
+Antes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG]]"""
-SUS_PROVA_SOCIAL_CARDIO_A23 = """Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG]]"""
+SUS_PROVA_SOCIAL_BARI_A20 = """Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.
 
-[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG]]"""
+Antes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:
 
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG]]"""
+SUS_PROVA_SOCIAL_NEURO_A21_A22 = """Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.
+
+Antes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:
+
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG]]
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG]]"""
+SUS_PROVA_SOCIAL_CARDIO_A23 = """Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.
+
+Antes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:
+
+[[IMAGE:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG]]"""
 def _prova_social_sus_pos_respostas():
     esp = _n(st.session_state.dados.get("especialidade", ""))
     if "onco" in esp:
@@ -1606,6 +1609,12 @@ def _retomar_apos_escala_urgencia(resposta: str):
 # ============================================
 
 def processar(resposta: str):
+    pergunta_atual = ""
+    if st.session_state.get("perguntas_ativas"):
+        try:
+            pergunta_atual = st.session_state.perguntas_ativas[st.session_state.pergunta_idx]
+        except Exception:
+            pergunta_atual = ""
     estado = st.session_state.estado
     dados  = st.session_state.dados
 
@@ -1854,7 +1863,7 @@ def processar(resposta: str):
     elif estado == "SUS_PERGUNTAS":
         idx = st.session_state.pergunta_idx
         dados[f"resp_{idx}"] = resposta
-        if "qual foi o motivo da negativa" in _n(pergunta_atual):
+        if "qual foi o motivo da negativa" in _n(locals().get("pergunta_atual", "")):
             dados["motivo_negativa_ja_perguntado"] = True
         idx += 1
         st.session_state.pergunta_idx = idx
@@ -2754,6 +2763,22 @@ def _render_content_with_images(content: str, role: str = "bot"):
             f'<div class="chat-message user-message"><strong>👤 {nome}:</strong><br>{content}</div>',
             unsafe_allow_html=True,
         )
+
+
+def render_chat_content(content: str):
+    """Renderiza mensagens com texto, links clicáveis e imagens reais no Streamlit."""
+    if not content:
+        return
+
+    parts = re.split(r"(\[\[IMAGE:https?://[^\]]+\]\])", content)
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith("[[IMAGE:") and part.endswith("]]"):
+            url = part[len("[[IMAGE:"):-2].strip()
+            st.image(url, use_container_width=True)
+        else:
+            st.markdown(tornar_links_clicaveis(part), unsafe_allow_html=True)
 
 def main():
     st.title("🌹 Aurora Bot - Assistente Jurídica em Direito da Saúde")
