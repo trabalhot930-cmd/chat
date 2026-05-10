@@ -100,6 +100,47 @@ def _extrair_primeiro_numero(resposta: str):
     except ValueError:
         return None
 
+
+def tornar_links_clicaveis(texto: str) -> str:
+    """Transforma URLs simples em links clicáveis no Streamlit, preservando imagens HTML."""
+    if not texto:
+        return texto
+
+    # Não mexe em URLs dentro de tags HTML, especialmente <img src="..."> ou <img src='...'>
+    placeholders = []
+
+    def guardar_tag(match):
+        placeholders.append(match.group(0))
+        return f"__HTML_TAG_PLACEHOLDER_{len(placeholders)-1}__"
+
+    texto = re.sub(r"<[^>]+>", guardar_tag, texto)
+
+    # Evita duplicar links markdown já existentes [texto](url)
+    markdown_links = []
+
+    def guardar_md(match):
+        markdown_links.append(match.group(0))
+        return f"__MD_LINK_PLACEHOLDER_{len(markdown_links)-1}__"
+
+    texto = re.sub(r"\[[^\]]+\]\(https?://[^\s)]+\)", guardar_md, texto)
+
+    url_pattern = re.compile(r"(?<!\()(?<!\])\bhttps?://[^\s<>\"]+")
+
+    def repl_url(match):
+        url = match.group(0).rstrip(".,);]")
+        suffix = match.group(0)[len(url):]
+        return f'<a href="{url}" target="_blank">{url}</a>{suffix}'
+
+    texto = url_pattern.sub(repl_url, texto)
+
+    for i, md in enumerate(markdown_links):
+        texto = texto.replace(f"__MD_LINK_PLACEHOLDER_{i}__", md)
+
+    for i, tag in enumerate(placeholders):
+        texto = texto.replace(f"__HTML_TAG_PLACEHOLDER_{i}__", tag)
+
+    return texto
+
 def init_session():
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -155,8 +196,11 @@ def add_bot(msg, delay=0):
         # Corrige dupla substituição
         if "<strong>" in msg and "**" in msg:
             msg = msg.replace("**", "")
+        # Deixa todos os links das mensagens clicáveis automaticamente.
+        msg = tornar_links_clicaveis(msg)
+
         # Resposta imediata: sem espera artificial entre mensagens do robô.
-        st.session_state.messages.append({"role": "bot", "content": msg})
+        st.session_state.messages.append({"role": "bot", "content": tornar_links_clicaveis(msg)})
         # inicia/renova o contador para enviar "Ainda está por aqui?"
         # caso o cliente não responda em até 5 minutos após a última mensagem do robô
         st.session_state.aguardando_resposta_desde = time.time()
@@ -219,7 +263,7 @@ def check_24h_messages():
                 f"Oi, {st.session_state.nome or ''}! Tudo certo por aí? Vi que ainda não tivemos um retorno. Gostaria de saber se você ainda tem interesse em seguir com nosso acompanhamento jurídico ou se há algo específico que você gostaria de ajustar."
             ]
             if st.session_state.ultimo_contato_24h_idx < len(mensagens_24h):
-                st.session_state.messages.append({"role": "bot", "content": mensagens_24h[st.session_state.ultimo_contato_24h_idx]})
+                st.session_state.messages.append({"role": "bot", "content": tornar_links_clicaveis(mensagens_24h[st.session_state.ultimo_contato_24h_idx])})
                 st.session_state.ultimo_contato_24h_idx += 1
                 st.session_state.proxima_mensagem_24h_time = time.time() + 86400  # +24h
                 st.session_state.followup_sent = True
@@ -548,8 +592,14 @@ MSG_SUS_CONSULTA_PROTOCOLO = (
     "Isso faria diferença na sua vida agora?"
 )
 
-SUS_PROVA_SOCIAL_CONSULTA_A25 = """Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. Buscamos a sua consulta/exame com urgência para tirar você da fila e ter acesso ao seu diagnóstico com o médico especialista.\n\nAntes de você me responder se isso te ajudaria, veja como outras pessoas que estavam \"esquecidas\" na fila da regulação conseguiram a consulta com o especialista em poucos dias com a nossa intervenção:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG" alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_EXAME_A25_A24 = """O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita para um exame, enquanto a sua saúde vai se comprometendo.\n\nMuitas pessoas desistem porque acham que o SUS nunca vai liberar, mas veja como a Dra. Lethicia já conseguiu \"destravar\" exames complexos que estavam parados na regulação há meses:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG" alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A24.PNG" alt='A24.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+SUS_PROVA_SOCIAL_CONSULTA_A25 = """Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. Buscamos a sua consulta/exame com urgência para tirar você da fila e ter acesso ao seu diagnóstico com o médico especialista.\n\nAntes de você me responder se isso te ajudaria, veja como outras pessoas que estavam \"esquecidas\" na fila da regulação conseguiram a consulta com o especialista em poucos dias com a nossa intervenção:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG]]"""
+SUS_PROVA_SOCIAL_EXAME_A25_A24 = """O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita para um exame, enquanto a sua saúde vai se comprometendo.\n\nMuitas pessoas desistem porque acham que o SUS nunca vai liberar, mas veja como a Dra. Lethicia já conseguiu \"destravar\" exames complexos que estavam parados na regulação há meses:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG]]\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A24.PNG]]"""
 
 # --- FLUXO EXAME ---
 MSG_SUS_EXAME_Q1 = "Entendi... vamos ver isso com calma 💙\n\nQual exame o médico solicitou pra você?"
@@ -769,7 +819,9 @@ PS_REP_CURIOSIDADE = (
     "Uma curiosidade que poucos sabem: se você fosse pagar todas as cirurgias reparadoras do seu próprio bolso hoje, o investimento passaria facilmente dos R$ 20 mil reais, podendo chegar a mais de R$ 150 mil reais a depender de quais reparadoras você precisa, entre hospital e equipe. É um valor que foge da realidade de 99% dos brasileiros. Eu ajudo meus clientes a acessarem esse direito sem precisar desembolsar essa fortuna, afinal, o plano de saúde serve para isso. O investimento jurídico é apenas uma fração minúscula perto do que você vai economizar."
 )
 
-PS_REP_PROVA_SOCIAL_A1 = """Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A1.PNG" alt='A1.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_REP_PROVA_SOCIAL_A1 = """Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A1.PNG]]"""
 PS_REP_Q4 = "Quais cirurgias reparadoras você teria interesse em fazer?"
 PS_REP_Q5 = "Você já chegou a ir no médico cirurgião plástico pra solicitar as reparadoras?"
 
@@ -1092,32 +1144,62 @@ PS_OUTRO_DEMANDA_Q5B = "Quais documentos são?"
 PS_OUTRO_DEMANDA_Q6 = "Esse problema está afetando sua saúde atualmente?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_OUTRO_DEMANDA_Q7 = "Certo, recebi seus detalhes. Independentemente do caso, a minha premissa é sempre a mesma: o contrato de saúde deve servir para proteger a vida e o consumidor, não para criar barreiras."
 
-PS_PROVA_SOCIAL_BARI_A3 = """É revoltante mesmo. Mas olha só, {nome}, não deixe que esse 'não' te desanime. Veja o que aconteceu com outros clientes que também receberam negativas injustas de bariátrica e confiaram na Dra. Lethicia para reverter a situação:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A3.PNG" alt='A3.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_ENDO_A2 = """É exaustivo ter que lutar pelo básico quando você já está lidando com a dor física. Mas quero te mostrar que é possível vencer essa barreira. Veja o alívio dessas mulheres que, com o suporte da Dra. Lethicia, conseguiram garantir o tratamento adequado:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A2.PNG" alt='A2.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_ONCO_A4 = """É inadmissível que você tenha que lutar contra o plano de saúde enquanto luta pela sua vida. Mas saiba que você não precisa carregar esse peso sozinha. Veja como a intervenção da Dra. Lethicia trouxe tranquilidade para famílias que estavam na mesma situação:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A4.PNG" alt='A4.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_CARDIO_A5 = """É uma pressão enorme passar por isso quando o que você mais precisa é de repouso e cuidados. Mas não vamos deixar o plano de saúde colocar sua saúde em risco. Veja como garantimos que outros pacientes cardiológicos tivessem seus direitos respeitados e seus procedimentos autorizados com agilidade\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A5.PNG" alt='A5.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_NEURO_A6 = """Estamos falando de procedimentos extremamente delicados, onde cada detalhe conta para a sua plena recuperação. O plano não pode ignorar a complexidade do seu caso. Veja como a Dra. Lethicia já ajudou outras pessoas a garantirem cirurgias de alta complexidade, tanto de coluna quanto neurológicas, que haviam sido negadas:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A6.PNG" alt='A6.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_ORTO_A7 = """É muito frustrante ver o plano de saúde limitar os seus movimentos e a sua qualidade de vida por pura burocracia. Mas não vamos aceitar isso. Veja como a Dra. Lethicia já ajudou outros pacientes ortopédicos a garantirem suas próteses e cirurgias para voltarem à rotina sem dor:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A7.PNG" alt='A7.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_OFTAL_A8 = """É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A8.PNG" alt='A8.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_ERRO_A14 = """Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A14.PNG" alt='A14.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-PS_PROVA_SOCIAL_COPA_A13 = """É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A13.PNG" alt='A13.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+PS_PROVA_SOCIAL_BARI_A3 = """É revoltante mesmo. Mas olha só, {nome}, não deixe que esse 'não' te desanime. Veja o que aconteceu com outros clientes que também receberam negativas injustas de bariátrica e confiaram na Dra. Lethicia para reverter a situação:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A3.PNG]]"""
+PS_PROVA_SOCIAL_ENDO_A2 = """É exaustivo ter que lutar pelo básico quando você já está lidando com a dor física. Mas quero te mostrar que é possível vencer essa barreira. Veja o alívio dessas mulheres que, com o suporte da Dra. Lethicia, conseguiram garantir o tratamento adequado:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A2.PNG]]"""
+PS_PROVA_SOCIAL_ONCO_A4 = """É inadmissível que você tenha que lutar contra o plano de saúde enquanto luta pela sua vida. Mas saiba que você não precisa carregar esse peso sozinha. Veja como a intervenção da Dra. Lethicia trouxe tranquilidade para famílias que estavam na mesma situação:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A4.PNG]]"""
+PS_PROVA_SOCIAL_CARDIO_A5 = """É uma pressão enorme passar por isso quando o que você mais precisa é de repouso e cuidados. Mas não vamos deixar o plano de saúde colocar sua saúde em risco. Veja como garantimos que outros pacientes cardiológicos tivessem seus direitos respeitados e seus procedimentos autorizados com agilidade\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A5.PNG]]"""
+PS_PROVA_SOCIAL_NEURO_A6 = """Estamos falando de procedimentos extremamente delicados, onde cada detalhe conta para a sua plena recuperação. O plano não pode ignorar a complexidade do seu caso. Veja como a Dra. Lethicia já ajudou outras pessoas a garantirem cirurgias de alta complexidade, tanto de coluna quanto neurológicas, que haviam sido negadas:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A6.PNG]]"""
+PS_PROVA_SOCIAL_ORTO_A7 = """É muito frustrante ver o plano de saúde limitar os seus movimentos e a sua qualidade de vida por pura burocracia. Mas não vamos aceitar isso. Veja como a Dra. Lethicia já ajudou outros pacientes ortopédicos a garantirem suas próteses e cirurgias para voltarem à rotina sem dor:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A7.PNG]]"""
+PS_PROVA_SOCIAL_OFTAL_A8 = """É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A8.PNG]]"""
+PS_PROVA_SOCIAL_ERRO_A14 = """Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A14.PNG]]"""
+PS_PROVA_SOCIAL_COPA_A13 = """É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A13.PNG]]"""
 
 PS_PROVA_SOCIAL_MEDICAMENTO_A9 = """É revoltante saber que o seu tratamento depende de uma medicação que o plano deveria cobrir sem questionar. O custo desses medicamentos é proibitivo para a maioria das pessoas, mas o seu direito é garantido por lei. Veja como a Dra. Lethicia já ajudou outros pacientes a garantirem o fornecimento imediato de medicações de alto custo:
 
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A9.PNG" alt='A9.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A9.PNG]]"""
 PS_PROVA_SOCIAL_HOMECARE_A10 = """É uma situação exaustiva. Nenhuma família deveria ter que brigar com um plano de saúde enquanto cuida de alguém que ama em casa. Mas quero te mostrar que essa batalha tem solução. Veja o alívio dessas famílias que, com o apoio da Dra. Lethicia, garantiram a estrutura completa de Home Care que o plano tentou negar:
 
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A10.PNG" alt='A10.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A10.PNG]]"""
 PS_PROVA_SOCIAL_TEA_A11 = """É angustiante ver o tempo passar e o plano de saúde criar barreiras para o desenvolvimento do seu filho ou seu. Sabemos que cada dia sem a terapia correta conta muito. Mas não desanime! Veja o alívio de outras famílias que conseguiram, através da Dra. Lethicia, garantir o tratamento multidisciplinar completo, sem limites de sessões e com os profissionais especializados:
 
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A11.PNG" alt='A11.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A11.PNG]]"""
 PS_PROVA_SOCIAL_REAJUSTE_A12 = """Eu te entendo. É como se o plano estivesse te punindo por ficar mais velho ou simplesmente por precisar do serviço. Mas a boa notícia é que a Justiça não aceita esses aumentos sem uma justificativa real. Veja o resultado de quem decidiu não aceitar esse abuso e conseguiu baixar o valor do boleto com a ajuda da Dra. Lethicia:
 
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A12.PNG" alt='A12.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A12.PNG]]"""
 PS_PROVA_SOCIAL_REABILITACAO_A15_A26 = """É muito frustrante ver o plano de saúde limitar a sua recuperação justamente quando você mais precisa de continuidade. A fisioterapia é o que garante que você volte à sua rotina normal. Veja como a Dra. Lethicia já ajudou outros pacientes a garantirem o tratamento completo, sem limite de sessões e com o acompanhamento que o médico prescreveu:
 
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A15.PNG" alt='A15.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>
-<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A26.PNG" alt='A26.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A15.PNG]]
+
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A26.PNG]]"""
 
 
 
@@ -1132,13 +1214,29 @@ PS_PONTO_CRITICO = (
 
 
 # Provas sociais por especialidade no SUS (marcadores de imagem)
-SUS_PROVA_SOCIAL_ONCO_A16 = """Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG" alt='A16.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_TEA_A17 = """No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG" alt='A17.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_ENDO_A18 = """Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG" alt='A18.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_MED_A19 = """É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG" alt='A19.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_BARI_A20 = """Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG" alt='A20.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_NEURO_A21_A22 = """Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG" alt='A21.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG" alt='A22.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
-SUS_PROVA_SOCIAL_CARDIO_A23 = """Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG" alt='A23.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"""
+SUS_PROVA_SOCIAL_ONCO_A16 = """Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG]]"""
+SUS_PROVA_SOCIAL_TEA_A17 = """No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG]]"""
+SUS_PROVA_SOCIAL_ENDO_A18 = """Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG]]"""
+SUS_PROVA_SOCIAL_MED_A19 = """É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG]]"""
+SUS_PROVA_SOCIAL_BARI_A20 = """Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG]]"""
+SUS_PROVA_SOCIAL_NEURO_A21_A22 = """Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG]]\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG]]"""
+SUS_PROVA_SOCIAL_CARDIO_A23 = """Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n
+
+[[IMG:https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG]]"""
 
 def _prova_social_sus_pos_respostas():
     esp = _n(st.session_state.dados.get("especialidade", ""))
@@ -2283,8 +2381,37 @@ def processar(resposta: str):
         add_bot(PS_REP_Q2)
     elif estado == "PS_REP_Q2":
         dados["rep_q2"] = resposta
-        st.session_state.estado = "PS_REP_FALTAM_META"
-        add_bot(PS_REP_FALTAM_META)
+        resp_norm = _n(resposta)
+
+        # Se a pessoa já chegou à meta, NÃO pergunta quantos kg faltam.
+        # Segue diretamente para "Quantos kg você perdeu no processo de emagrecimento?"
+        if (
+            resposta == "1"
+            or "já cheguei" in resp_norm
+            or "ja cheguei" in resp_norm
+            or "cheguei" in resp_norm
+            or "minha meta" in resp_norm
+        ):
+            st.session_state.estado = "PS_REP_KG_PERDIDOS"
+            add_bot(PS_REP_KG_PERDIDOS)
+            return
+
+        # Só pergunta quantos kg faltam se a pessoa clicar/responder "Ainda não".
+        if (
+            resposta == "2"
+            or "ainda não" in resp_norm
+            or "ainda nao" in resp_norm
+            or "não cheguei" in resp_norm
+            or "nao cheguei" in resp_norm
+        ):
+            st.session_state.estado = "PS_REP_FALTAM_META"
+            add_bot(PS_REP_FALTAM_META)
+            return
+
+        # Segurança: se a resposta não for reconhecida, reapresenta as opções corretas.
+        add_bot("Escolha uma das opções para eu te direcionar corretamente:\n\n1️⃣ Já cheguei à minha meta\n2️⃣ Ainda não")
+        st.session_state.estado = "PS_REP_Q2"
+        return
     elif estado == "PS_REP_FALTAM_META":
         dados["rep_faltam_meta"] = resposta
         faltam = _extrair_primeiro_numero(resposta)
@@ -2582,17 +2709,26 @@ def processar(resposta: str):
 
 
 def _render_content_with_images(content: str, role: str = "bot"):
-    """Renderiza mensagens com suporte real a imagens do GitHub.
+    """Renderiza mensagens com suporte seguro a imagens.
 
-    Algumas mensagens possuem tags <img src="...">. Se elas forem inseridas
-    dentro de uma única string HTML, o Streamlit pode não exibir a imagem em
-    alguns ambientes. Esta função separa texto e imagens e renderiza cada imagem
-    com st.image(), garantindo que apareça no app.
+    As imagens podem vir como marcadores [[IMG:URL]] ou como tags antigas <img src="URL">.
+    O texto é exibido separado da imagem e a imagem é renderizada com st.image(),
+    evitando erro de HTML/aspas no Streamlit.
     """
     content = str(content or "")
-    img_pattern = re.compile(r'<br>\s*<img\s+src=["\']([^"\']+)["\'][^>]*>', re.IGNORECASE)
-    urls = img_pattern.findall(content)
-    text_only = img_pattern.sub("", content).strip()
+
+    # Captura imagens no formato novo: [[IMG:https://...]]
+    marker_pattern = re.compile(r'\[\[IMG:([^\]]+)\]\]', re.IGNORECASE)
+    marker_urls = marker_pattern.findall(content)
+    content = marker_pattern.sub("", content)
+
+    # Captura imagens que ainda estejam no formato antigo HTML.
+    html_pattern = re.compile(r'<br>\s*<img\s+src=["\']([^"\']+)["\'][^>]*>', re.IGNORECASE)
+    html_urls = html_pattern.findall(content)
+    content = html_pattern.sub("", content)
+
+    urls = marker_urls + html_urls
+    text_only = content.strip()
 
     if role == "bot":
         if text_only:
@@ -2601,8 +2737,17 @@ def _render_content_with_images(content: str, role: str = "bot"):
                 unsafe_allow_html=True,
             )
         for url in urls:
-            # Renderização nativa da imagem para evitar falha de HTML/Markdown.
-            st.image(url, use_container_width=True)
+            url = str(url).strip()
+            if not url:
+                continue
+            try:
+                st.image(url, use_container_width=True)
+            except TypeError:
+                # Compatibilidade com versões antigas do Streamlit.
+                st.image(url)
+            except Exception:
+                # Fallback clicável caso o ambiente bloqueie a imagem externa.
+                st.markdown(f'<a href="{url}" target="_blank">Abrir imagem</a>', unsafe_allow_html=True)
     else:
         nome = st.session_state.nome or "Você"
         st.markdown(
@@ -2635,12 +2780,12 @@ def main():
     # Followup e finalização
     if st.session_state.followup_time and not st.session_state.followup_sent:
         if now >= st.session_state.followup_time:
-            st.session_state.messages.append({"role": "bot", "content": MSG_FOLLOWUP_LINK})
+            st.session_state.messages.append({"role": "bot", "content": tornar_links_clicaveis(MSG_FOLLOWUP_LINK)})
             st.session_state.followup_sent = True
             rerun_timed = True
     if st.session_state.finalizacao_time and not st.session_state.finalizacao_sent:
         if now >= st.session_state.finalizacao_time:
-            st.session_state.messages.append({"role": "bot", "content": MSG_AGENDAMENTO_FINALIZADO})
+            st.session_state.messages.append({"role": "bot", "content": tornar_links_clicaveis(MSG_AGENDAMENTO_FINALIZADO)})
             st.session_state.finalizacao_sent = True
             st.session_state.estado = "FIM"
             rerun_timed = True
