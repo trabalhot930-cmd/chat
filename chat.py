@@ -90,6 +90,16 @@ def _opcao_numero(r: str):
     m = re.search(r"(?:^|\b)([0-8])(?:\b|️⃣)", texto)
     return m.group(1) if m else None
 
+def _extrair_primeiro_numero(resposta: str):
+    """Extrai o primeiro número de uma resposta, aceitando vírgula ou ponto."""
+    m = re.search(r"\d+(?:[,.]\d+)?", str(resposta or ""))
+    if not m:
+        return None
+    try:
+        return float(m.group(0).replace(",", "."))
+    except ValueError:
+        return None
+
 def init_session():
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -243,7 +253,7 @@ def verificar_pergunta_resultados(resposta: str) -> bool:
         "vocês já ganharam", "voces ja ganharam", "vocês já ganharam causas", "voces ja ganharam causas",
         "causas assim", "casos assim", "tenho medo de perder",
         "medo de perder", "tenho medo de gastar", "tenho medo de investir",
-        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder", "é ganho de causa", "e ganho de causa", "ganho de causa", "já ganharam casos", "ja ganharam casos"
+        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder", "é ganho de causa", "e ganho de causa", "ganho de causa", "já ganharam casos", "ja ganharam casos", "ganhou caso", "ganharam caso", "caso ganho", "causa ganha"
     ]
     return any(palavra in _n(resposta) for palavra in palavras_chave)
 
@@ -289,6 +299,32 @@ def voltar_apos_pergunta_resultados(resposta: str):
         st.session_state.dados_antes_pergunta = None
         st.session_state.mensagem_antes_pergunta_resultados = None
         return False
+
+
+def enviar_resposta_usuario(resposta: str, exibicao: str = None):
+    """Registra a resposta do usuário e garante interceptações globais em qualquer fonte.
+
+    Essa função deve ser usada tanto para texto digitado quanto para cliques em botões.
+    Assim, perguntas sobre resultado/garantia/medo de perder são identificadas em
+    qualquer etapa do fluxo, inclusive quando existem botões ativos na tela.
+    """
+    texto_exibido = str(exibicao if exibicao is not None else resposta)
+    valor_processado = str(resposta)
+    add_user(texto_exibido)
+    st.session_state.aguardando_resposta_desde = None
+
+    estado_atual = st.session_state.get("estado")
+    texto_para_interceptar = f"{texto_exibido} {valor_processado}"
+
+    if estado_atual == "PERGUNTA_RESULTADOS":
+        voltar_apos_pergunta_resultados(valor_processado)
+        return
+
+    if estado_atual != "FIM" and verificar_pergunta_resultados(texto_para_interceptar):
+        processar_pergunta_resultados(texto_para_interceptar)
+        return
+
+    processar(valor_processado)
 
 # ============================================
 # MENSAGENS PRINCIPAIS (com rosa 🌹)
@@ -512,8 +548,8 @@ MSG_SUS_CONSULTA_PROTOCOLO = (
     "Isso faria diferença na sua vida agora?"
 )
 
-SUS_PROVA_SOCIAL_CONSULTA_A25 = "Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. Buscamos a sua consulta/exame com urgência para tirar você da fila e ter acesso ao seu diagnóstico com o médico especialista.\n\nAntes de você me responder se isso te ajudaria, veja como outras pessoas que estavam \"esquecidas\" na fila da regulação conseguiram a consulta com o especialista em poucos dias com a nossa intervenção:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG' alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_EXAME_A25_A24 = "O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita para um exame, enquanto a sua saúde vai se comprometendo.\n\nMuitas pessoas desistem porque acham que o SUS nunca vai liberar, mas veja como a Dra. Lethicia já conseguiu \"destravar\" exames complexos que estavam parados na regulação há meses:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG' alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A24.PNG' alt='A24.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_CONSULTA_A25 = "Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. Buscamos a sua consulta/exame com urgência para tirar você da fila e ter acesso ao seu diagnóstico com o médico especialista.\n\nAntes de você me responder se isso te ajudaria, veja como outras pessoas que estavam \"esquecidas\" na fila da regulação conseguiram a consulta com o especialista em poucos dias com a nossa intervenção:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG" alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_EXAME_A25_A24 = "O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita para um exame, enquanto a sua saúde vai se comprometendo.\n\nMuitas pessoas desistem porque acham que o SUS nunca vai liberar, mas veja como a Dra. Lethicia já conseguiu \"destravar\" exames complexos que estavam parados na regulação há meses:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A25.PNG" alt='A25.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A24.PNG" alt='A24.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
 
 # --- FLUXO EXAME ---
 MSG_SUS_EXAME_Q1 = "Entendi... vamos ver isso com calma 💙\n\nQual exame o médico solicitou pra você?"
@@ -609,7 +645,67 @@ PS_SITUACAO = (
 # ============================================
 PS_REP_Q1 = "Você realizou a cirurgia bariátrica ou teve uma perda de peso expressiva através de dieta, exercícios ou uso das canetas emagrecedoras (Mounjaro, Ozempic, Tirzepatida...)?"
 PS_REP_Q2 = "Você já chegou ou ainda falta pouco pro peso que gostaria?\n\n1️⃣ Já cheguei à minha meta\n2️⃣ Ainda não"
+PS_REP_FALTAM_META = "Faltam quantos quilos pra você chegar a meta de peso que gostaria?"
 PS_REP_KG_PERDIDOS = "Quantos kg você perdeu no processo de emagrecimento?"
+
+PS_REP_MAIS6_PARABENS = (
+    "Primeiramente, quero te dar os parabéns! Esse processo de emagrecimento é uma jornada de saúde incrível. "
+    "A pressa agora pode ser inimiga do resultado: o mais importante é que você chegue na fase das reparadoras "
+    "com o peso estabilizado e total segurança.\n\n"
+    "Me conta quantos kilos você já perdeu até agora?!"
+)
+
+PS_REP_MAIS6_MITO = (
+    "Muitas pessoas pensam que o direito às cirurgias reparadoras só existe para quem fez a bariátrica, "
+    "mas eu tenho uma notícia muito importante para te dar: Isso é um mito! A lei e os tribunais entendem "
+    "que o que gera o direito à reparação é o emagrecimento acentuado e a sobra de pele que causa desconforto "
+    "ou problemas de saúde, não importa se você emagreceu com cirurgia, com medicação ou com dieta e exercícios.\n\n"
+    "Você sabia que o seu direito é exatamente o mesmo de quem fez bariátrica?"
+)
+
+PS_REP_MAIS6_GUIA_PERGUNTA = (
+    "Pois é! E tem um detalhe que quase ninguém te conta: Muitas pessoas cometem o erro de esperar o peso final "
+    "para só então entender seus direitos, e acabam perdendo meses em filas ou burocracias. Para te ajudar nessa jornada "
+    "e garantir que você não perca tempo quando chegar lá, eu preparei um pequeno 'Guia de Preparação Jurídica' "
+    "(não cobro nada por isso) para você já saber o que documentar desde agora, mesmo ainda estando no processo de perda de peso.\n\n"
+    "Posso te enviar?"
+)
+
+PS_REP_MAIS6_GUIA_LINK = (
+    "Aqui está o seu Guia! 📄\n"
+    "Nele você vai ver que a prova da sua jornada começa hoje.\n"
+    "https://drive.google.com/file/d/1-DzNkvpA8Uez5JOQ8GyMWjeS_Fd98VER/view?usp=drive_link"
+)
+
+PS_REP_MAIS6_DECISAO = (
+    "Mas me diga uma coisa: para você se sentir 100% segura, você prefere seguir as orientações do guia sozinha "
+    "ou gostaria que a Dra. Lethicia fizesse uma análise individual do seu caso para montar o seu plano de ação personalizado?"
+)
+
+PS_REP_MAIS6_ATENDIMENTO = (
+    "Perfeito! Para esse tipo de dúvida pontual, oferecemos o Atendimento Particular. Diferente da consultoria completa, "
+    "aqui você tira todas as suas dúvidas, tem um direcionamento claro do seu caso e um especialista te responde de forma técnica "
+    "e direta, analisando se o seu direito é garantido por lei. Isso te ajudaria?"
+)
+
+PS_REP_MAIS6_INVESTIMENTO = (
+    "O investimento no atendimento particular é de R$ 97,00 e é feito online.\n\n"
+    "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
+    "• Estratégia Jurídica: Prova técnica de que seu caso é obrigatório pelo plano, com base na lei e nas decisões judiciais mais recentes.\n"
+    "• Análise de Viabilidade: Avaliação real das chances de sucesso do seu caso e orientações sobre como corrigir falhas que podem levar à negativa do plano OU da justiça.\n"
+    "• Guia de Direcionamento: Orientação sobre quais tipos de especialistas e exames você deve buscar para montar um dossiê forte, e onde focar para conseguir a documentação necessária.\n"
+    "• Análise de Viabilidade: Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n\n"
+    "Podemos marcar um horário pra você na agenda da Dra Lethicia?"
+)
+
+PS_REP_MAIS6_ENCERRAMENTO = (
+    "Entendo perfeitamente e respeito sua decisão.\n\n"
+    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com procedimentos em andamento. "
+    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
+    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
+)
+
+PS_REP_MAIS6_CALENDLY = "https://calendly.com/lethiciafernanda-adv-lxev/atendimento-particular"
 
 # NOVA MENSAGEM: Obrigada por compartilhar...
 PS_REP_OBRIGADA = (
@@ -673,7 +769,7 @@ PS_REP_CURIOSIDADE = (
     "Uma curiosidade que poucos sabem: se você fosse pagar todas as cirurgias reparadoras do seu próprio bolso hoje, o investimento passaria facilmente dos R$ 20 mil reais, podendo chegar a mais de R$ 150 mil reais a depender de quais reparadoras você precisa, entre hospital e equipe. É um valor que foge da realidade de 99% dos brasileiros. Eu ajudo meus clientes a acessarem esse direito sem precisar desembolsar essa fortuna, afinal, o plano de saúde serve para isso. O investimento jurídico é apenas uma fração minúscula perto do que você vai economizar."
 )
 
-PS_REP_PROVA_SOCIAL_A1 = "Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A1.PNG' alt='A1.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_REP_PROVA_SOCIAL_A1 = "Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A1.PNG" alt='A1.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
 PS_REP_Q4 = "Quais cirurgias reparadoras você teria interesse em fazer?"
 PS_REP_Q5 = "Você já chegou a ir no médico cirurgião plástico pra solicitar as reparadoras?"
 
@@ -995,15 +1091,15 @@ PS_OUTRO_DEMANDA_Q5B = "Quais documentos são?"
 PS_OUTRO_DEMANDA_Q6 = "Esse problema está afetando sua saúde atualmente?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_OUTRO_DEMANDA_Q7 = "Certo, recebi seus detalhes. Independentemente do caso, a minha premissa é sempre a mesma: o contrato de saúde deve servir para proteger a vida e o consumidor, não para criar barreiras."
 
-PS_PROVA_SOCIAL_BARI_A3 = "É revoltante mesmo. Mas olha só, {nome}, não deixe que esse 'não' te desanime. Veja o que aconteceu com outros clientes que também receberam negativas injustas de bariátrica e confiaram na Dra. Lethicia para reverter a situação:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A3.PNG' alt='A3.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_ENDO_A2 = "É exaustivo ter que lutar pelo básico quando você já está lidando com a dor física. Mas quero te mostrar que é possível vencer essa barreira. Veja o alívio dessas mulheres que, com o suporte da Dra. Lethicia, conseguiram garantir o tratamento adequado:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A2.PNG' alt='A2.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_ONCO_A4 = "É inadmissível que você tenha que lutar contra o plano de saúde enquanto luta pela sua vida. Mas saiba que você não precisa carregar esse peso sozinha. Veja como a intervenção da Dra. Lethicia trouxe tranquilidade para famílias que estavam na mesma situação:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A4.PNG' alt='A4.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_CARDIO_A5 = "É uma pressão enorme passar por isso quando o que você mais precisa é de repouso e cuidados. Mas não vamos deixar o plano de saúde colocar sua saúde em risco. Veja como garantimos que outros pacientes cardiológicos tivessem seus direitos respeitados e seus procedimentos autorizados com agilidade\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A5.PNG' alt='A5.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_NEURO_A6 = "Estamos falando de procedimentos extremamente delicados, onde cada detalhe conta para a sua plena recuperação. O plano não pode ignorar a complexidade do seu caso. Veja como a Dra. Lethicia já ajudou outras pessoas a garantirem cirurgias de alta complexidade, tanto de coluna quanto neurológicas, que haviam sido negadas:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A6.PNG' alt='A6.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_ORTO_A7 = "É muito frustrante ver o plano de saúde limitar os seus movimentos e a sua qualidade de vida por pura burocracia. Mas não vamos aceitar isso. Veja como a Dra. Lethicia já ajudou outros pacientes ortopédicos a garantirem suas próteses e cirurgias para voltarem à rotina sem dor:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A7.PNG' alt='A7.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_OFTAL_A8 = "É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A8.PNG' alt='A8.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_ERRO_A14 = "Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A14.PNG' alt='A14.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-PS_PROVA_SOCIAL_COPA_A13 = "É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A13.PNG' alt='A13.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_BARI_A3 = "É revoltante mesmo. Mas olha só, {nome}, não deixe que esse 'não' te desanime. Veja o que aconteceu com outros clientes que também receberam negativas injustas de bariátrica e confiaram na Dra. Lethicia para reverter a situação:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A3.PNG" alt='A3.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_ENDO_A2 = "É exaustivo ter que lutar pelo básico quando você já está lidando com a dor física. Mas quero te mostrar que é possível vencer essa barreira. Veja o alívio dessas mulheres que, com o suporte da Dra. Lethicia, conseguiram garantir o tratamento adequado:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A2.PNG" alt='A2.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_ONCO_A4 = "É inadmissível que você tenha que lutar contra o plano de saúde enquanto luta pela sua vida. Mas saiba que você não precisa carregar esse peso sozinha. Veja como a intervenção da Dra. Lethicia trouxe tranquilidade para famílias que estavam na mesma situação:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A4.PNG" alt='A4.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_CARDIO_A5 = "É uma pressão enorme passar por isso quando o que você mais precisa é de repouso e cuidados. Mas não vamos deixar o plano de saúde colocar sua saúde em risco. Veja como garantimos que outros pacientes cardiológicos tivessem seus direitos respeitados e seus procedimentos autorizados com agilidade\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A5.PNG" alt='A5.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_NEURO_A6 = "Estamos falando de procedimentos extremamente delicados, onde cada detalhe conta para a sua plena recuperação. O plano não pode ignorar a complexidade do seu caso. Veja como a Dra. Lethicia já ajudou outras pessoas a garantirem cirurgias de alta complexidade, tanto de coluna quanto neurológicas, que haviam sido negadas:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A6.PNG" alt='A6.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_ORTO_A7 = "É muito frustrante ver o plano de saúde limitar os seus movimentos e a sua qualidade de vida por pura burocracia. Mas não vamos aceitar isso. Veja como a Dra. Lethicia já ajudou outros pacientes ortopédicos a garantirem suas próteses e cirurgias para voltarem à rotina sem dor:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A7.PNG" alt='A7.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_OFTAL_A8 = "É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A8.PNG" alt='A8.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_ERRO_A14 = "Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A14.PNG" alt='A14.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+PS_PROVA_SOCIAL_COPA_A13 = "É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A13.PNG" alt='A13.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
 
 
 PS_PONTO_CRITICO = (
@@ -1017,13 +1113,13 @@ PS_PONTO_CRITICO = (
 
 
 # Provas sociais por especialidade no SUS (marcadores de imagem)
-SUS_PROVA_SOCIAL_ONCO_A16 = "Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG' alt='A16.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_TEA_A17 = "No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG' alt='A17.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_ENDO_A18 = "Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG' alt='A18.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_MED_A19 = "É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG' alt='A19.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_BARI_A20 = "Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG' alt='A20.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_NEURO_A21_A22 = "Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG' alt='A21.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG' alt='A22.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
-SUS_PROVA_SOCIAL_CARDIO_A23 = "Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n<br><img src='https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG' alt='A23.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_ONCO_A16 = "Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A16.PNG" alt='A16.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_TEA_A17 = "No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A17.PNG" alt='A17.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_ENDO_A18 = "Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A18.PNG" alt='A18.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_MED_A19 = "É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A19.PNG" alt='A19.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_BARI_A20 = "Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A20.PNG" alt='A20.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_NEURO_A21_A22 = "Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A21.PNG" alt='A21.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A22.PNG" alt='A22.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
+SUS_PROVA_SOCIAL_CARDIO_A23 = "Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n<br><img src="https://raw.githubusercontent.com/trabalhot930-cmd/chat/main/A23.PNG" alt='A23.PNG' style='max-width:100%; border-radius:10px; margin-top:8px; margin-bottom:8px;'>"
 
 def _prova_social_sus_pos_respostas():
     esp = _n(st.session_state.dados.get("especialidade", ""))
@@ -1224,6 +1320,44 @@ def _e_pergunta_valor(r: str) -> bool:
     ]
     return any(p in texto for p in palavras)
 
+
+
+def _resposta_e_opcao_de_fluxo_valor(resposta: str) -> bool:
+    """Evita que opções internas do fluxo sejam confundidas com pergunta sobre honorários/valores.
+
+    Ex.: no fluxo de Medicamento Negado, a opção "Alto custo" é motivo da negativa
+    do plano, não uma pergunta do cliente sobre valor do serviço jurídico.
+    """
+    texto = _n(resposta)
+    texto_limpo = re.sub(r"^[0-9]+\s*️⃣?\s*", "", texto).strip()
+    opcoes_fluxo = {
+        "alto custo",
+        "2 alto custo",
+        "2️⃣ alto custo",
+        "uso domiciliar",
+        "experimental/off-label",
+        "fora do rol da ans",
+        "não atende diretriz (dut)",
+        "nao atende diretriz (dut)",
+        "carência",
+        "carencia",
+        "não é urgente",
+        "nao é urgente",
+        "experimental",
+        "outro",
+    }
+    if texto in opcoes_fluxo or texto_limpo in opcoes_fluxo:
+        # Confirma que a pergunta ativa é de opção/motivo de negativa, para não bloquear
+        # perguntas reais sobre preço feitas fora desse contexto.
+        perguntas = st.session_state.get("perguntas_ativas", []) or []
+        idx = st.session_state.get("pergunta_idx", 0)
+        pergunta_atual = perguntas[idx] if idx < len(perguntas) else ""
+        ultima_bot = next((m.get("content", "") for m in reversed(st.session_state.get("messages", [])) if m.get("role") == "bot"), "")
+        contexto = _n(f"{pergunta_atual} {ultima_bot}")
+        if "qual foi o motivo da negativa" in contexto or "motivo da negativa" in contexto:
+            return True
+    return False
+
 def _contexto_valor_analise_inicial() -> bool:
     dados = st.session_state.dados
     estado = st.session_state.estado
@@ -1383,7 +1517,11 @@ def processar(resposta: str):
         return
 
     # Interceptar perguntas de valor em qualquer estado (exceto INICIO)
-    if estado not in ("INICIO", "FIM", "PERGUNTA_VALOR_ANALISE", "PERGUNTA_VALOR_GERAL") and _e_pergunta_valor(resposta):
+    if (
+        estado not in ("INICIO", "FIM", "PERGUNTA_VALOR_ANALISE", "PERGUNTA_VALOR_GERAL")
+        and _e_pergunta_valor(resposta)
+        and not _resposta_e_opcao_de_fluxo_valor(resposta)
+    ):
         if _contexto_valor_analise_inicial():
             iniciar_interceptacao_valor_analise()
         else:
@@ -2115,8 +2253,23 @@ def processar(resposta: str):
         add_bot(PS_REP_Q2)
     elif estado == "PS_REP_Q2":
         dados["rep_q2"] = resposta
-        st.session_state.estado = "PS_REP_KG_PERDIDOS"
-        add_bot(PS_REP_KG_PERDIDOS)
+        st.session_state.estado = "PS_REP_FALTAM_META"
+        add_bot(PS_REP_FALTAM_META)
+    elif estado == "PS_REP_FALTAM_META":
+        dados["rep_faltam_meta"] = resposta
+        faltam = _extrair_primeiro_numero(resposta)
+        if faltam is None:
+            add_bot("Me informe apenas um número aproximado de quantos quilos ainda faltam para chegar à sua meta, por favor.")
+            st.session_state.estado = "PS_REP_FALTAM_META"
+            return
+        if faltam <= 6:
+            # Segue como se a pessoa já estivesse na meta ou muito próxima dela.
+            st.session_state.estado = "PS_REP_KG_PERDIDOS"
+            add_bot(PS_REP_KG_PERDIDOS)
+        else:
+            # Novo fluxo para quem ainda precisa perder mais de 6kg.
+            st.session_state.estado = "PS_REP_MAIS6_KG_PERDIDOS"
+            add_bot(PS_REP_MAIS6_PARABENS)
     elif estado == "PS_REP_KG_PERDIDOS":
         dados["rep_kg_perdidos"] = resposta
         _perguntar_escala_urgencia("PS_REP_EMPATIA", PS_REP_EMPATIA, "PS_REP_EMPATIA", "plano_reparadora")
@@ -2124,8 +2277,57 @@ def processar(resposta: str):
     elif estado == "PS_REP_FALTAM_KG":
         # Compatibilidade com conversas iniciadas em versões anteriores.
         dados["rep_faltam_kg"] = resposta
-        st.session_state.estado = "PS_REP_KG_PERDIDOS"
-        add_bot(PS_REP_KG_PERDIDOS)
+        st.session_state.estado = "PS_REP_FALTAM_META"
+        add_bot(PS_REP_FALTAM_META)
+    elif estado == "PS_REP_MAIS6_KG_PERDIDOS":
+        dados["rep_mais6_kg_perdidos"] = resposta
+        st.session_state.estado = "PS_REP_MAIS6_SABIA"
+        add_bot(PS_REP_MAIS6_MITO)
+    elif estado == "PS_REP_MAIS6_SABIA":
+        dados["rep_mais6_sabia"] = resposta
+        st.session_state.estado = "PS_REP_MAIS6_GUIA_PERGUNTA"
+        add_bot(PS_REP_MAIS6_GUIA_PERGUNTA)
+    elif estado == "PS_REP_MAIS6_GUIA_PERGUNTA":
+        dados["rep_mais6_guia"] = resposta
+        add_bot(PS_REP_MAIS6_GUIA_LINK)
+        st.session_state.estado = "PS_REP_MAIS6_DECISAO"
+        add_bot(PS_REP_MAIS6_DECISAO)
+    elif estado == "PS_REP_MAIS6_DECISAO":
+        n = _n(resposta)
+        if "análise" in n or "analise" in n or "individual" in n:
+            st.session_state.estado = "PS_REP_MAIS6_ATENDIMENTO_AJUDA"
+            add_bot(PS_REP_MAIS6_ATENDIMENTO)
+        else:
+            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+    elif estado == "PS_REP_MAIS6_ATENDIMENTO_AJUDA":
+        if _sim(resposta):
+            st.session_state.estado = "PS_REP_MAIS6_MARCAR"
+            add_bot(PS_REP_MAIS6_INVESTIMENTO)
+        else:
+            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+    elif estado == "PS_REP_MAIS6_MARCAR":
+        if _sim(resposta):
+            st.session_state.estado = "PS_REP_MAIS6_PAGAMENTO"
+            add_bot("Perfeito! Vamos reservar o seu horário.\n\nComo deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?")
+        else:
+            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+    elif estado == "PS_REP_MAIS6_PAGAMENTO":
+        n = _n(resposta)
+        if "cartão" in n or "cartao" in n or "crédito" in n or "credito" in n:
+            add_bot(f"✅ Aqui está o link para pagamento via Cartão de Crédito:\n\n{LINK_CARTAO_97}")
+        elif "pix" in n:
+            add_bot(f"✅ Aqui está o link para pagamento via Pix:\n\n{LINK_PIX_97}")
+        else:
+            add_bot("Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?")
+            st.session_state.estado = "PS_REP_MAIS6_PAGAMENTO"
+            return
+        add_bot(f"Para facilitar, você mesma pode escolher o melhor dia e horário para a sua reunião através do link abaixo.\n{PS_REP_MAIS6_CALENDLY}")
+        add_bot("Atenção: Como a agenda da Dra. Lethicia é muito concorrida, o seu horário só será confirmado e garantido após a identificação do pagamento pelo nosso setor financeiro.\nAssim que o pagamento for processado, nossa equipe entrará em contato imediatamente para validar o seu atendimento.")
+        add_bot("Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes para confirmar seu atendimento na agenda da Dra. Lethicia. 🌹")
+        st.session_state.estado = "FIM"
     elif estado == "PS_CONSULTA_97_DECISAO":
         n = _n(resposta)
         if "tirar" in n or "dúvida" in n or "duvida" in n or _sim(resposta):
@@ -2431,8 +2633,7 @@ def main():
     def btn(label, valor=None):
         v = valor or label
         if st.button(label, use_container_width=False, key=f"btn_{label}_{v}"):
-            add_user(v)
-            processar(v)
+            enviar_resposta_usuario(v, exibicao=label)
             st.rerun()
 
     def render_opcoes_numeradas(texto):
@@ -2463,6 +2664,33 @@ def main():
         for i, (label, valor) in enumerate(opcoes):
             with cols[i % len(cols)]:
                 btn(label, valor)
+        return True
+
+    def render_multiselect_terapias():
+        """Permite selecionar mais de uma terapia indicada pelo médico."""
+        opcoes_terapias = [
+            "ABA",
+            "Fisioterapia",
+            "Psicologia",
+            "Fonoaudiologia",
+            "Terapia ocupacional",
+            "Psicopedagogia",
+            "Musicoterapia",
+            "Hidroterapia",
+            "OUTROS",
+        ]
+        selecionadas = st.multiselect(
+            "Selecione todas as terapias indicadas pelo médico:",
+            opcoes_terapias,
+            key="multiselect_terapias_indicadas",
+        )
+        if st.button("✅ Confirmar terapias", use_container_width=False, key="btn_confirmar_terapias_multiplas"):
+            if not selecionadas:
+                st.warning("Selecione pelo menos uma terapia para continuar.")
+            else:
+                resposta_multiplas = ", ".join(selecionadas)
+                enviar_resposta_usuario(resposta_multiplas)
+                st.rerun()
         return True
 
     def show_buttons():
@@ -2581,6 +2809,21 @@ def main():
             c1, c2 = st.columns(2)
             with c1: btn("1️⃣ Já cheguei à minha meta", "1")
             with c2: btn("2️⃣ Ainda não", "2")
+
+        elif estado == "PS_REP_MAIS6_DECISAO":
+            c1, c2 = st.columns(2)
+            with c1: btn("⚖️ ANÁLISE INDIVIDUAL", "ANÁLISE INDIVIDUAL")
+            with c2: btn("👤 SOZINHO(A)", "SOZINHO(A)")
+
+        elif estado in ("PS_REP_MAIS6_ATENDIMENTO_AJUDA", "PS_REP_MAIS6_MARCAR"):
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ SIM", "SIM")
+            with c2: btn("❌ NÃO", "NÃO")
+
+        elif estado == "PS_REP_MAIS6_PAGAMENTO":
+            c1, c2 = st.columns(2)
+            with c1: btn("💳 Cartão de Crédito", "cartão")
+            with c2: btn("📱 Pix", "pix")
 
         elif estado == "PS_REP_Q5":
             c1, c2 = st.columns(2)
@@ -2750,9 +2993,12 @@ def main():
                 pergunta_atual = perguntas[idx]
                 q = pergunta_atual.lower()
 
+                # Terapias indicadas: permite múltiplas alternativas, pois o médico pode prescrever mais de uma terapia.
+                if pergunta_atual == PS_TERA_Q2:
+                    render_multiselect_terapias()
                 # Regra geral: toda pergunta com alternativas numeradas deve virar botão,
                 # inclusive Oftalmologia, Exames, Home Care, Terapias, Reajuste, Coparticipação e Erro Médico.
-                if render_opcoes_numeradas(pergunta_atual):
+                elif render_opcoes_numeradas(pergunta_atual):
                     pass
                 # Motivo da negativa: não exibir botões genéricos de Sim/Não.
                 # Exibir as 6 opções corretas do texto.
@@ -2798,10 +3044,7 @@ def main():
     )
 
     if st.button("📤 Enviar", use_container_width=True) and user_input:
-        add_user(user_input)
-        # Atualiza timestamp da última resposta
-        st.session_state.aguardando_resposta_desde = None
-        processar(user_input)
+        enviar_resposta_usuario(user_input)
         # Define novo timeout para resposta
         st.session_state.aguardando_resposta_desde = time.time()
         st.rerun()
