@@ -72,7 +72,7 @@ def _n(r: str) -> str:
     return str(r).strip().lower()
 
 def _sim(r: str) -> bool:
-    return any(p in _n(r) for p in ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo"])
+    return any(p in _n(r) for p in ["sim", "s", "yes", "quero", "ok", "claro", "vamos", "aceito", "topo", "certo", "seguir", "tudo bem", "td bem", "perfeito", "pode", "beleza", "blz", "continuar", "prosseguir"])
 
 def _opcao_numero(r: str):
     """Extrai opção numérica escolhida por botão/texto.
@@ -243,7 +243,7 @@ def verificar_pergunta_resultados(resposta: str) -> bool:
         "vocês já ganharam", "voces ja ganharam", "vocês já ganharam causas", "voces ja ganharam causas",
         "causas assim", "casos assim", "tenho medo de perder",
         "medo de perder", "tenho medo de gastar", "tenho medo de investir",
-        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder", "é ganho de causa", "e ganho de causa", "ganho de causa"
+        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder", "é ganho de causa", "e ganho de causa", "ganho de causa", "já ganharam casos", "ja ganharam casos"
     ]
     return any(palavra in _n(resposta) for palavra in palavras_chave)
 
@@ -295,10 +295,8 @@ def voltar_apos_pergunta_resultados(resposta: str):
 # ============================================
 
 MSG_BOAS_VINDAS = (
-    "Olá, seja bem vindo(a). 🌹\n\n"
-    "Sou a Aurora, assistente jurídica do escritório da Dra Lethicia Fernanda, "
-    "advogada especialista em Direito da Saúde.\n\n"
-    "Fico feliz que você entrou em contato conosco.\n\n"
+    "Olá, tudo bem com você?\n\n"
+    "Sou a Aurora, assistente jurídica do escritório da Dra Lethicia. 🌹\n\n"
     "Qual o seu nome?"
 )
 
@@ -340,7 +338,7 @@ MSG_VALORES_ANALISE_INICIAL = (
 # SUS - FLUXO CIRURGIA (Mensagem do câncer apenas para maligno)
 # ============================================
 
-MSG_SUS_DEMANDA = "Me diga o que você está aguardando?\n\n🔪 Cirurgia / Tratamento\n\n📋 Consultas / Exames"
+MSG_SUS_DEMANDA = "Me diga o que você está aguardando?\n\n🔪 Cirurgia / Tratamento (terapias, medicamentos, etc)\n📋 Consultas / Exames"
 
 MSG_SUS_ESPECIALIDADE = (
     "Para que eu direcione você para o protocolo de urgência correto, "
@@ -497,10 +495,9 @@ MSG_SUS_CONSULTA_PITCH = (
     "Muitas vezes o SUS nega a consulta dizendo que não tem o especialista, mas a lei é clara: "
     "se o governo não tem o médico, ele é obrigado a pagar uma consulta particular para você. "
     "A espera na fila da regulação não pode ser eterna, principalmente quando há dor ou risco de sequela.\n\n"
-    "O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita quando existe risco de agravamento. "
-    "Você quer continuar contando com a sorte do sistema ou quer que a Dra. Lethicia force o governo a cumprir a lei agora?"
+    "O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita quando existe risco de agravamento."
 )
-MSG_SUS_CONSULTA_AJUDA_Q1 = "Entendi...\n\nVocê está aguardando há quanto tempo mais ou menos?"
+MSG_SUS_CONSULTA_AJUDA_Q1 = "Me conta... Você está aguardando há quanto tempo mais ou menos?"
 MSG_SUS_CONSULTA_AJUDA_Q2 = "O que te informaram quando você questionou sua posição na fila ou quando você foi tentar marcar? (fila, falta de médico, sem previsão...)"
 MSG_SUS_CONSULTA_AJUDA_Q3 = "Você teria algum exame informando a condição de saúde que tem?"
 MSG_SUS_CONSULTA_AJUDA_Q4 = (
@@ -515,8 +512,12 @@ MSG_SUS_CONSULTA_PROTOCOLO = (
     "Isso faria diferença na sua vida agora?"
 )
 
+SUS_PROVA_SOCIAL_CONSULTA_A25 = "Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. Buscamos a sua consulta/exame com urgência para tirar você da fila e ter acesso ao seu diagnóstico com o médico especialista.\n\nAntes de você me responder se isso te ajudaria, veja como outras pessoas que estavam \"esquecidas\" na fila da regulação conseguiram a consulta com o especialista em poucos dias com a nossa intervenção:\n\n[IMAGEM: A25.png]"
+SUS_PROVA_SOCIAL_EXAME_A25_A24 = "O Judiciário entende que o Estado não tem o direito de te deixar em uma fila infinita para um exame, enquanto a sua saúde vai se comprometendo.\n\nMuitas pessoas desistem porque acham que o SUS nunca vai liberar, mas veja como a Dra. Lethicia já conseguiu \"destravar\" exames complexos que estavam parados na regulação há meses:\n\n[IMAGEM: A25.png]\n[IMAGEM: A24.png]"
+
 # --- FLUXO EXAME ---
 MSG_SUS_EXAME_Q1 = "Entendi... vamos ver isso com calma 💙\n\nQual exame o médico solicitou pra você?"
+MSG_SUS_EXAME_FILA_INFO = "O que te informaram quando você questionou sua posição na fila ou quando você foi tentar marcar? (fila, falta de médico, sem previsão...)"
 MSG_SUS_EXAME_TIPO = (
     "Esse exame que você precisa é para qual finalidade principal?\n\n"
     "1️⃣ Diagnóstico: Para descobrir o que eu tenho.\n"
@@ -672,6 +673,7 @@ PS_REP_CURIOSIDADE = (
     "Uma curiosidade que poucos sabem: se você fosse pagar todas as cirurgias reparadoras do seu próprio bolso hoje, o investimento passaria facilmente dos R$ 20 mil reais, podendo chegar a mais de R$ 150 mil reais a depender de quais reparadoras você precisa, entre hospital e equipe. É um valor que foge da realidade de 99% dos brasileiros. Eu ajudo meus clientes a acessarem esse direito sem precisar desembolsar essa fortuna, afinal, o plano de saúde serve para isso. O investimento jurídico é apenas uma fração minúscula perto do que você vai economizar."
 )
 
+PS_REP_PROVA_SOCIAL_A1 = "Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n[IMAGEM: A1.png]"
 PS_REP_Q4 = "Quais cirurgias reparadoras você teria interesse em fazer?"
 PS_REP_Q5 = "Você já chegou a ir no médico cirurgião plástico pra solicitar as reparadoras?"
 
@@ -698,7 +700,7 @@ PS_NEG_CIR_ESP = "Qual é o diagnóstico ou o tratamento específico que o plano
 # 2A. ENDOMETRIOSE
 PS_ENDO_Q1 = "Qual tipo de cirurgia foi indicada para o seu caso?"
 PS_ENDO_Q2 = "Sinto muito que você esteja passando por isso. Sabemos que a endometriose não é 'só uma cólica', é algo que para a vida da mulher 💙\n\nO plano negou formalmente ou simplesmente não respondeu?"
-PS_ENDO_Q3 = "Sei o quanto a dor e a incerteza cansam, mas você merece viver com saúde e qualidade. Não é justo que a sua cirurgia seja negada depois de tanta espera. Vou te ajudar a destravar esse processo 💙\n\nO plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_ENDO_Q3 = "Sei o quanto a dor e a incerteza cansam, mas você merece viver com saúde e qualidade. Não é justo que a sua cirurgia seja negada depois de tanta espera. Vou te ajudar a destravar esse processo 💙\n\nQual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_ENDO_Q4 = "Você tem os exames que demonstram o seu diagnóstico?"
 PS_ENDO_Q5 = "Você já tentou resolver isso diretamente com o plano — ligação, protocolo, ouvidoria ou recurso formal?"
 
@@ -706,16 +708,17 @@ PS_ENDO_Q5 = "Você já tentou resolver isso diretamente com o plano — ligaç�
 PS_BARI_Q1 = "Qual o seu IMC atual? Se não souber, pode me falar somente seu peso atual e sua altura"
 PS_BARI_Q2 = "Você tem comorbidades? (diabetes, hipertensão, apneia do sono, problemas nas articulações)"
 PS_BARI_Q3_MSG = "A cirurgia bariátrica nunca é apenas estética. É seu direito concluir esse ciclo com segurança e cobertura total pela operadora. Vou superar esses obstáculos contratuais para que seu procedimento seja autorizado 💙"
-PS_BARI_Q3 = PS_BARI_Q3_MSG + "\n\nFez o acompanhamento multidisciplinar exigido (nutricionista, psicólogo, endocrinologista)?"
+PS_BARI_Q3_PERGUNTA = "Fez o acompanhamento multidisciplinar exigido (nutricionista, psicólogo, endocrinologista)?"
+PS_BARI_Q3 = PS_BARI_Q3_MSG + "\n\n" + PS_BARI_Q3_PERGUNTA
 PS_BARI_Q4 = "O plano negou formalmente ou simplesmente não respondeu?"
-PS_BARI_Q5 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_BARI_Q5 = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_BARI_Q6 = "Você já tentou resolver isso diretamente com o plano — ligação, protocolo, ouvidoria ou recurso formal?"
 
 # 2C. ONCOLOGIA
 PS_ONCO_Q1 = "Qual o tipo de câncer e qual procedimento foi indicado — cirurgia, quimio, radio, imunoterapia?"
 PS_ONCO_Q2 = "Já está em tratamento de alguma forma, ou a negativa está impedindo o início?"
 PS_ONCO_Q3 = "Sinto muito que você esteja passando por isso, mas saiba que não está sozinha nessa luta. Vou cuidar de toda a burocracia para que você tenha seu tratamento sem interrupções. Seu foco agora deve ser apenas a sua cura: o resto, pode deixar aqui com a gente.\n\nO plano negou formalmente ou simplesmente não respondeu?"
-PS_ONCO_Q4 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_ONCO_Q4 = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_ONCO_Q5 = "Você tem os exames que demonstram o seu diagnóstico?"
 PS_ONCO_Q6 = "Você já tentou resolver isso diretamente com o plano — ligação, protocolo, ouvidoria ou recurso formal?"
 
@@ -740,7 +743,7 @@ PS_NEURO_Q7 = "Você tem exames de imagem — ressonância magnética, tomografi
 # 2F. ORTOPEDIA
 PS_ORTO_Q1 = "Qual cirurgia ortopédica foi indicada?"
 PS_ORTO_Q2 = "A condição está limitando sua mobilidade ou capacidade de trabalho?\n\n1️⃣ Sim, de forma significativa\n2️⃣ Parcialmente\n3️⃣ Ainda consigo me movimentar"
-PS_ORTO_Q3 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_ORTO_Q3 = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_ORTO_APOIO = "É muito comum os planos de saúde darem desculpas para não pagar um tratamento, ignorando o que o seu médico pediu. Eu sei o quanto é angustiante ouvir um 'não' do plano de saúde, principalmente quando estamos falando de Ortopedia. Mas a regra é simples: se o médico disse que você precisa, o plano tem que cobrir. Como eu trabalho só com casos de saúde, vejo que a gente tem um caminho bem claro para seguir aqui. O contrato do plano existe para cuidar da sua vida, não para te dar dor de cabeça. Você sente que eles estão sendo injustos com você?"
 PS_ORTO_Q4 = "No seu caso o plano negou material cirúrgico ou alguma prótese?"
 PS_ORTO_Q5 = "A negativa do plano foi por escrita ou verbal (telefone ou balcão de atendimento)?"
@@ -750,7 +753,7 @@ PS_ORTO_Q6 = "Você tem exames de imagem — ressonância magnética, tomografia
 PS_OFTAL_Q1 = "Qual cirurgia oftalmológica foi indicada?"
 PS_OFTAL_Q2 = "A condição está afetando sua visão de forma significativa?\n\n1️⃣ Sim, já estou com visão muito comprometida\n2️⃣ Está piorando progressivamente\n3️⃣ Ainda consigo enxergar razoavelmente"
 PS_OFTAL_Q3 = "O médico indicou urgência, risco de perda de visão se não operar logo?\n\n1️⃣ Sim, há urgência expressa no laudo\n2️⃣ O médico disse verbalmente, mas não está no laudo\n3️⃣ Não há urgência indicada"
-PS_OFTAL_Q4 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_OFTAL_Q4 = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_OFTAL_Q5 = "A negativa do plano foi por escrita ou verbal (telefone ou balcão de atendimento)?"
 PS_OFTAL_APOIO = "É muito comum os planos de saúde darem desculpas para não pagar um tratamento, ignorando o que o seu médico pediu. Eu sei o quanto é angustiante ouvir um 'não' do plano de saúde, principalmente quando estamos falando de Oftalmologia. Mas a regra é simples: se o médico disse que você precisa, o plano tem que cobrir. Como eu trabalho só com casos de saúde, vejo que a gente tem um caminho bem claro para seguir aqui. O contrato do plano existe para cuidar da sua vida, não para te dar dor de cabeça. Você sente que eles estão sendo injustos com você?"
 
@@ -761,7 +764,7 @@ PS_OUTRO_Q2 = "Para qual problema ou doença ela foi recomendada?"
 PS_OUTRO_Q3 = "Você possui exames que comprovam a necessidade?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_OUTRO_Q4 = "A cirurgia foi negada?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Ainda não solicitei"
 PS_OUTRO_APOIO = "É muito comum os planos de saúde darem desculpas para não pagar um tratamento, ignorando o que o seu médico pediu. Eu sei o quanto é angustiante ouvir um 'não' do plano de saúde, principalmente quando estamos falando do procedimento indicado pelo seu médico. Mas a regra é simples: se o médico disse que você precisa, o plano tem que cobrir. Como eu trabalho só com casos de saúde, vejo que a gente tem um caminho bem claro para seguir aqui. O contrato do plano existe para cuidar da sua vida, não para te dar dor de cabeça. Você sente que eles estão sendo injustos com você?"
-PS_OUTRO_Q5 = "O plano justificou a negativa de alguma forma? (Ex: 'eletivo', 'sem cobertura', 'período de carência')"
+PS_OUTRO_Q5 = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Não atende diretriz (DUT)\n3️⃣ Carência\n4️⃣ Não é urgente\n5️⃣ Experimental\n6️⃣ Outro"
 PS_OUTRO_Q6 = "A negativa do plano foi por escrita ou verbal (telefone ou balcão de atendimento)?"
 PS_OUTRO_Q7 = "Hoje, a falta dessa cirurgia te impede de trabalhar, de dormir bem ou de realizar suas atividades simples do dia a dia?"
 PS_OUTRO_Q8 = "Se você não realizar a cirurgia, pode ocorrer:\n\n1️⃣ Dor intensa\n2️⃣ Agravamento do problema\n3️⃣ Risco à saúde\n4️⃣ Limitação no dia a dia"
@@ -772,6 +775,7 @@ PS_OUTRO_Q9 = "Você possui exames que comprovam a necessidade?\n\n1️⃣ Sim\n
 # ============================================
 PS_MED_Q1  = "Qual doença você está tratando?"
 PS_MED_Q2  = "Qual medicamento foi prescrito pelo médico?"
+PS_MED_Q2B = "Qual a dosagem (mg/ml) prescrita pelo seu médico e quantas doses você precisa tomar por mês?"
 PS_MED_Q3  = "O fornecimento do medicamento foi negado?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Ainda não solicitei"
 PS_MED_Q4  = "Eu sei que cada dia sem a medicação gera uma ansiedade enorme, afinal, a sua saúde não pode esperar o tempo do plano.\n\nHoje, a falta desse medicamento já está afetando o controle da sua doença ou causando sintomas que impedem sua rotina?"
 PS_MED_Q5  = "Qual foi o motivo da negativa?\n\n1️⃣ Fora do rol da ANS\n2️⃣ Alto custo\n3️⃣ Uso domiciliar\n4️⃣ Experimental/off-label\n5️⃣ Outro"
@@ -929,6 +933,8 @@ PS_ERRO_Q3 = "Eu imagino o quanto esse momento está sendo difícil para você e
 PS_ERRO_Q4 = "Você possui prontuário médico?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_ERRO_Q5 = "Outro médico já disse que houve erro ou falha no atendimento?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_ERRO_Q6 = "Você sente que houve falta de informação, descaso ou uma falha clara na técnica do médico ou do hospital?"
+PS_ERRO_Q7_ESTAGIO = "Sinto muito, de verdade, por tudo o que você passou (ou está passando). É doloroso demais quando buscamos ajuda médica e acabamos sofrendo um dano por falha de quem deveria cuidar de nós. No escritório, tratamos esses casos com o máximo de respeito e seriedade que a situação exige. 💙\n\nPara eu situar o estágio do seu direito: Há quanto tempo esse fato aconteceu e você já tentou registrar alguma queixa no Conselho de Medicina ou na Ouvidoria do hospital?"
+
 
 
 # Novo fluxo pós-pergunta final - Erro Médico
@@ -983,10 +989,22 @@ PS_ERRO_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso finance
 PS_OUTRO_DEMANDA_Q1 = "Entendido! O Direito da Saúde é muito amplo e, se o seu problema envolve o seu bem-estar ou o seu contrato de saúde, você está no lugar certo. 💙\n\nPara que eu possa entender como te ajudar, me conte brevemente o que está acontecendo. O plano de saúde negou algo?"
 PS_OUTRO_DEMANDA_Q2 = "Existe algum prazo ou data limite que te preocupa agora (ex: uma cirurgia marcada, um boleto vencendo ou um prazo de defesa)?"
 PS_OUTRO_DEMANDA_Q3 = "Você recebeu alguma negativa ou teve dificuldade no atendimento?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Não se encaixa"
-PS_OUTRO_DEMANDA_Q4 = "Você tem isso registrado (mensagem, documento, protocolo)?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Não se encaixa"
-PS_OUTRO_DEMANDA_Q5 = "Você possui documentos relacionados ao caso?\n\n1️⃣ Sim\n2️⃣ Não"
+PS_OUTRO_DEMANDA_Q4 = "Você tem a negativa/justificativa registrada (mensagem, documento, protocolo)?\n\n1️⃣ Sim\n2️⃣ Não\n3️⃣ Não se encaixa"
+PS_OUTRO_DEMANDA_Q5 = "Você possui documentos relacionados ao caso? (exames, laudos, relatórios, receitas de medicamentos, etc...)\n\n1️⃣ Sim\n2️⃣ Não"
+PS_OUTRO_DEMANDA_Q5B = "Quais documentos são?"
 PS_OUTRO_DEMANDA_Q6 = "Esse problema está afetando sua saúde atualmente?\n\n1️⃣ Sim\n2️⃣ Não"
 PS_OUTRO_DEMANDA_Q7 = "Certo, recebi seus detalhes. Independentemente do caso, a minha premissa é sempre a mesma: o contrato de saúde deve servir para proteger a vida e o consumidor, não para criar barreiras."
+
+PS_PROVA_SOCIAL_BARI_A3 = "É revoltante mesmo. Mas olha só, {nome}, não deixe que esse 'não' te desanime. Veja o que aconteceu com outros clientes que também receberam negativas injustas de bariátrica e confiaram na Dra. Lethicia para reverter a situação:\n\n[IMAGEM: A3.png]"
+PS_PROVA_SOCIAL_ENDO_A2 = "É exaustivo ter que lutar pelo básico quando você já está lidando com a dor física. Mas quero te mostrar que é possível vencer essa barreira. Veja o alívio dessas mulheres que, com o suporte da Dra. Lethicia, conseguiram garantir o tratamento adequado:\n\n[IMAGEM: A2.png]"
+PS_PROVA_SOCIAL_ONCO_A4 = "É inadmissível que você tenha que lutar contra o plano de saúde enquanto luta pela sua vida. Mas saiba que você não precisa carregar esse peso sozinha. Veja como a intervenção da Dra. Lethicia trouxe tranquilidade para famílias que estavam na mesma situação:\n\n[IMAGEM: A4.png]"
+PS_PROVA_SOCIAL_CARDIO_A5 = "É uma pressão enorme passar por isso quando o que você mais precisa é de repouso e cuidados. Mas não vamos deixar o plano de saúde colocar sua saúde em risco. Veja como garantimos que outros pacientes cardiológicos tivessem seus direitos respeitados e seus procedimentos autorizados com agilidade\n\n[IMAGEM: A5.png]"
+PS_PROVA_SOCIAL_NEURO_A6 = "Estamos falando de procedimentos extremamente delicados, onde cada detalhe conta para a sua plena recuperação. O plano não pode ignorar a complexidade do seu caso. Veja como a Dra. Lethicia já ajudou outras pessoas a garantirem cirurgias de alta complexidade, tanto de coluna quanto neurológicas, que haviam sido negadas:\n\n[IMAGEM: A6.png]"
+PS_PROVA_SOCIAL_ORTO_A7 = "É muito frustrante ver o plano de saúde limitar os seus movimentos e a sua qualidade de vida por pura burocracia. Mas não vamos aceitar isso. Veja como a Dra. Lethicia já ajudou outros pacientes ortopédicos a garantirem suas próteses e cirurgias para voltarem à rotina sem dor:\n\n[IMAGEM: A7.png]"
+PS_PROVA_SOCIAL_OFTAL_A8 = "É angustiante ver o plano de saúde colocar em risco algo tão precioso quanto a sua visão. Sabemos que em casos oftalmológicos, o tempo é o nosso maior inimigo. Veja como a Dra. Lethicia agiu rápido para garantir que outros pacientes não perdessem a chance de enxergar com clareza:\n\n[IMAGEM: A8.png]"
+PS_PROVA_SOCIAL_ERRO_A14 = "Embora nada apague o que aconteceu, a justiça serve para trazer dignidade e garantir que você tenha todo o suporte para reparação e tratamentos futuros. Veja como a Dra. Lethicia já ajudou outras pessoas a responsabilizarem os culpados e garantirem seus direitos após erros graves:\n\n[IMAGEM: A14.png]"
+PS_PROVA_SOCIAL_COPA_A13 = "É um absurdo você pagar a mensalidade em dia e ainda ser 'punido' financeiramente cada vez que precisa de um exame ou terapia. A coparticipação não pode ser abusiva a ponto de impedir o seu acesso à saúde. Veja como a Dra. Lethicia já ajudou outros clientes a limitarem esses descontos e recuperarem o equilíbrio nas contas:\n\n[IMAGEM: A13.png]"
+
 
 PS_PONTO_CRITICO = (
     "É muito comum os planos de saúde darem desculpas para não pagar um tratamento, ignorando o que o seu médico pediu. "
@@ -996,6 +1014,34 @@ PS_PONTO_CRITICO = (
     "O contrato do plano existe para cuidar da sua vida, não para te dar dor de cabeça. "
     "Você sente que eles estão sendo injustos com você?"
 )
+
+
+# Provas sociais por especialidade no SUS (marcadores de imagem)
+SUS_PROVA_SOCIAL_ONCO_A16 = "Eu entendo e sinto muito que você tenha chegado a esse ponto de medo. Mas saiba que você não precisa mais carregar esse peso sozinho(a). Antes de eu te explicar o nosso Protocolo de Liberação Urgente, veja o alívio de quem também estava na fila do SUS perdendo as esperanças e conseguiu o tratamento em poucos dias após a nossa intervenção jurídica:\n\n[IMAGEM: A16.png]"
+SUS_PROVA_SOCIAL_TEA_A17 = "No caso do autismo, cada semana sem terapia é uma oportunidade de desenvolvimento que não volta mais.\n\nMas olha só, {nome}, não aceite que o SUS pare o seu futuro ou o do seu filho. Veja como outras famílias conseguiram tirar os filhos da fila e garantir as terapias completas com o suporte da Dra. Lethicia:\n\n[IMAGEM: A17.png]"
+SUS_PROVA_SOCIAL_ENDO_A18 = "Eu sinto muito que você tenha chegado a esse limite de dor. Tanto a endometriose quanto a adenomiose são doenças progressivas e não podem ser tratadas como se fossem 'só uma cólica' em uma fila de espera infinita.\n\nAntes de te explicar como nosso escritório atua, quero te mostrar que o seu caso tem solução sim. Veja o alívio dessas mulheres que também estavam esquecidas na fila do SUS e conseguiram a cirurgia e o tratamento especializado com a ajuda da Dra. Lethicia:\n\n[IMAGEM: A18.png]"
+SUS_PROVA_SOCIAL_MED_A19 = "É angustiante saber que a sua saúde depende de um remédio que o Estado tem o dever de fornecer, mas nega. A justiça não aceita que o seu tratamento seja interrompido por falta de estoque ou burocracia.\n\nAntes de te explicar como funciona o nosso Protocolo de Liberação, veja o alívio de quem também estava sem o medicamento e conseguiu a entrega imediata com a nossa ajuda:\n\n[IMAGEM: A19.png]"
+SUS_PROVA_SOCIAL_BARI_A20 = "Eu te entendo perfeitamente. A obesidade é uma doença crônica e a espera na fila do SUS muitas vezes agrava outros problemas, como diabetes e hipertensão. Você não pode esperar anos por um direito que é urgente.\n\nAntes de te explicar como nosso escritório trabalha para furar essa fila legalmente, veja o resultado de quem decidiu não esperar mais e conseguiu a liberação da cirurgia bariátrica com a intervenção da Dra. Lethicia:\n\n[IMAGEM: A20.png]"
+SUS_PROVA_SOCIAL_NEURO_A21_A22 = "Quando falamos de neurologia, seja na coluna ou na cabeça, sabemos que cada dia de espera pode significar uma sequela que não queremos que aconteça. O Estado não pode tratar o seu sistema nervoso como uma fila comum.\n\nAntes de te mostrar como o nosso Protocolo de Liberação Urgente funciona para furar essa fila, veja como a Dra. Lethicia já conseguiu garantir cirurgias e tratamentos neurológicos complexos para quem não podia mais esperar:\n\n[IMAGEM: A21.png]\n[IMAGEM: A22.png]"
+SUS_PROVA_SOCIAL_CARDIO_A23 = "Eu entendo o seu receio. Quando o assunto é o coração, o tempo é o nosso recurso mais precioso e o Estado não tem o direito de colocar a sua vida em espera.\n\nAntes de te explicar como o nosso Protocolo de Liberação Urgente funciona, veja como a Dra. Lethicia já ajudou outras famílias a saírem da fila e garantirem cirurgias e procedimentos cardíacos com a urgência que o caso pedia:\n\n[IMAGEM: A23.png]"
+
+def _prova_social_sus_pos_respostas():
+    esp = _n(st.session_state.dados.get("especialidade", ""))
+    if "onco" in esp:
+        return SUS_PROVA_SOCIAL_ONCO_A16
+    if "neurodiverg" in esp or "tea" in esp or "tdah" in esp:
+        return SUS_PROVA_SOCIAL_TEA_A17
+    if "endometriose" in esp or "adenomiose" in esp:
+        return SUS_PROVA_SOCIAL_ENDO_A18
+    if "medicamento" in esp:
+        return SUS_PROVA_SOCIAL_MED_A19
+    if "bari" in esp:
+        return SUS_PROVA_SOCIAL_BARI_A20
+    if "neurolog" in esp or "neurocir" in esp:
+        return SUS_PROVA_SOCIAL_NEURO_A21_A22
+    if "cardio" in esp:
+        return SUS_PROVA_SOCIAL_CARDIO_A23
+    return None
 
 # ============================================
 # MENSAGENS PRÉ-POS BUSCA (2 novas mensagens que antecedem)
@@ -1218,6 +1264,17 @@ def iniciar_interceptacao_valor_analise():
     st.session_state.estado = "PERGUNTA_VALOR_ANALISE"
     add_bot(MSG_VALORES_ANALISE_INICIAL)
 
+def iniciar_interceptacao_valor_geral():
+    """Pausa o fluxo quando a pessoa pergunta sobre valores e retoma após resposta afirmativa."""
+    st.session_state.estado_antes_valor = st.session_state.estado
+    st.session_state.dados_antes_valor = st.session_state.dados.copy()
+    st.session_state.mensagem_antes_valor = next(
+        (m.get("content") for m in reversed(st.session_state.messages) if m.get("role") == "bot"),
+        None
+    )
+    st.session_state.estado = "PERGUNTA_VALOR_GERAL"
+    add_bot(_msg_valor())
+
 def voltar_apos_pergunta_valor(resposta: str):
     if _sim(resposta):
         estado_anterior = st.session_state.estado_antes_valor
@@ -1254,7 +1311,7 @@ def iniciar_fluxo_reparadora_97():
 # Função para obter nome da especialidade (não o número)
 def get_nome_especialidade(valor):
     mapa = {
-        "1": "Endometriose",
+        "1": "endometriose/adenomiose",
         "2": "Bariátrica", 
         "3": "Oncologia (câncer)",
         "4": "Cardiologia",
@@ -1267,7 +1324,7 @@ def get_nome_especialidade(valor):
 
 
 MSG_ESCALA_URGENCIA = (
-    "Em uma escala de 1 a 5, o quanto esse problema é urgente para você hoje?\n\n"
+    "Em uma escala de 1 a 5, o quanto esse problema é urgente para você hoje?\n(Sendo 1 não urgente e 5 muito urgente)\n\n"
     "1️⃣ 1\n2️⃣ 2\n3️⃣ 3\n4️⃣ 4\n5️⃣ 5"
 )
 
@@ -1304,32 +1361,33 @@ def processar(resposta: str):
     # Atualiza timestamp da última resposta do usuário
     st.session_state.aguardando_resposta_desde = None
 
+    # Interceptação global de perguntas sobre resultado/garantia/medo de perder.
+    # Fica antes de qualquer outro estado para funcionar em qualquer etapa do fluxo,
+    # inclusive durante escala de urgência, perguntas com botões, valores e finais de rota.
+    if estado == "PERGUNTA_RESULTADOS":
+        voltar_apos_pergunta_resultados(resposta)
+        return
+
+    if estado not in ("INICIO", "FIM") and verificar_pergunta_resultados(resposta):
+        processar_pergunta_resultados(resposta)
+        return
+
     # Resposta à escala de urgência inserida após a terceira pergunta da área
     if estado == "ESCALA_URGENCIA":
         _retomar_apos_escala_urgencia(resposta)
         return
 
-    # Verificar se é pergunta sobre resultados (prioridade)
-    if estado not in ("INICIO", "PERGUNTA_RESULTADOS") and verificar_pergunta_resultados(resposta):
-        processar_pergunta_resultados(resposta)
-        return
-
-    # Estado especial para resposta da pergunta sobre resultados
-    if estado == "PERGUNTA_RESULTADOS":
-        voltar_apos_pergunta_resultados(resposta)
-        return
-
-    # Estado especial para resposta da pergunta sobre valores em fluxos específicos
-    if estado == "PERGUNTA_VALOR_ANALISE":
+    # Estado especial para resposta da pergunta sobre valores
+    if estado in ("PERGUNTA_VALOR_ANALISE", "PERGUNTA_VALOR_GERAL"):
         voltar_apos_pergunta_valor(resposta)
         return
 
     # Interceptar perguntas de valor em qualquer estado (exceto INICIO)
-    if estado not in ("INICIO", "FIM", "PERGUNTA_VALOR_ANALISE") and _e_pergunta_valor(resposta):
+    if estado not in ("INICIO", "FIM", "PERGUNTA_VALOR_ANALISE", "PERGUNTA_VALOR_GERAL") and _e_pergunta_valor(resposta):
         if _contexto_valor_analise_inicial():
             iniciar_interceptacao_valor_analise()
         else:
-            add_bot(_msg_valor())
+            iniciar_interceptacao_valor_geral()
         return
 
     # ========== INICIO ==========
@@ -1401,6 +1459,7 @@ def processar(resposta: str):
         add_bot(MSG_SUS_CONSULTA_AJUDA_Q2)
     elif estado == "SUS_CONSULTA_AJUDA_Q2":
         dados["consulta_info_fila"] = resposta
+        add_bot(SUS_PROVA_SOCIAL_CONSULTA_A25)
         st.session_state.estado = "SUS_CONSULTA_AJUDA_Q3"
         add_bot(MSG_SUS_CONSULTA_AJUDA_Q3)
     elif estado == "SUS_CONSULTA_AJUDA_Q3":
@@ -1439,6 +1498,11 @@ def processar(resposta: str):
     # FLUXO EXAME
     elif estado == "SUS_EXAME_Q1":
         dados["exame_nome"] = resposta
+        st.session_state.estado = "SUS_EXAME_FILA_INFO"
+        add_bot(MSG_SUS_EXAME_FILA_INFO)
+    elif estado == "SUS_EXAME_FILA_INFO":
+        dados["exame_info_fila"] = resposta
+        add_bot(SUS_PROVA_SOCIAL_EXAME_A25_A24)
         st.session_state.estado = "SUS_EXAME_TIPO"
         add_bot(MSG_SUS_EXAME_TIPO)
     elif estado == "SUS_EXAME_TIPO":
@@ -1465,7 +1529,15 @@ def processar(resposta: str):
             _perguntar_escala_urgencia("SUS_EXAME_PERGUNTAS", proxima, "SUS_EXAME_PERGUNTAS", "sus_exame")
             return
         if idx < len(st.session_state.perguntas_ativas):
-            add_bot(st.session_state.perguntas_ativas[idx])
+            proxima_pergunta = st.session_state.perguntas_ativas[idx]
+            # Coparticipação: a mensagem explicativa deve vir seguida imediatamente
+            # da pergunta sobre contrato, sem aguardar resposta entre as duas.
+            if "copart" in _n(dados.get("situacao", "")) and proxima_pergunta == PS_COPA_Q6:
+                add_bot(PS_COPA_Q6)
+                add_bot(PS_COPA_Q7)
+                st.session_state.pergunta_idx = idx + 1
+                return
+            add_bot(proxima_pergunta)
         else:
             if _sus_docs_insuficientes("exame_resp_"):
                 _encaminhar_docs_insuficientes_sus()
@@ -1527,6 +1599,8 @@ def processar(resposta: str):
     elif estado == "SUS_PERGUNTAS":
         idx = st.session_state.pergunta_idx
         dados[f"resp_{idx}"] = resposta
+        if "qual foi o motivo da negativa" in _n(pergunta_atual):
+            dados["motivo_negativa_ja_perguntado"] = True
         idx += 1
         st.session_state.pergunta_idx = idx
         
@@ -1570,7 +1644,15 @@ def processar(resposta: str):
         st.session_state.pergunta_idx = idx
         st.session_state.estado = "SUS_PERGUNTAS"
         if idx < len(st.session_state.perguntas_ativas):
-            add_bot(st.session_state.perguntas_ativas[idx])
+            proxima_pergunta = st.session_state.perguntas_ativas[idx]
+            # Coparticipação: a mensagem explicativa deve vir seguida imediatamente
+            # da pergunta sobre contrato, sem aguardar resposta entre as duas.
+            if "copart" in _n(dados.get("situacao", "")) and proxima_pergunta == PS_COPA_Q6:
+                add_bot(PS_COPA_Q6)
+                add_bot(PS_COPA_Q7)
+                st.session_state.pergunta_idx = idx + 1
+                return
+            add_bot(proxima_pergunta)
         else:
             if _sus_docs_insuficientes("resp_"):
                 _encaminhar_docs_insuficientes_sus()
@@ -1583,6 +1665,9 @@ def processar(resposta: str):
         if _sus_docs_insuficientes("resp_"):
             _encaminhar_docs_insuficientes_sus()
         else:
+            prova_sus = _prova_social_sus_pos_respostas()
+            if prova_sus:
+                add_bot(prova_sus)
             st.session_state.estado = "PROPOSTA_SUS"
             add_bot(MSG_EXPLICACAO_SUS)
 
@@ -1635,10 +1720,12 @@ def processar(resposta: str):
             st.session_state.estado = "PS_SITUACAO"
             add_bot(PS_SITUACAO)
         else:
-            # Pessoa física - continua como NÃO
+            # Pessoa física - continua como NÃO.
+            # Envia a explicação e já pergunta o tratamento, sem aguardar nova resposta entre as mensagens.
             dados["plano_tipo"] = "pessoa_fisica"
-            st.session_state.estado = "PS_NAO_2ANOS_EDUCACAO"
             add_bot(PS_NAO_2ANOS_EDUCACAO)
+            st.session_state.estado = "PS_NAO_2ANOS_Q1"
+            add_bot(PS_NAO_2ANOS_Q1)
 
     # Caminho NÃO
     elif estado == "PS_NAO_2ANOS_EDUCACAO":
@@ -1650,9 +1737,11 @@ def processar(resposta: str):
         add_bot(PS_NAO_2ANOS_Q2)
     elif estado == "PS_NAO_2ANOS_Q2":
         dados["urgencia_comentario"] = resposta
-        st.session_state.estado = "PS_NAO_2ANOS_FEEDBACK"
         add_bot(PS_NAO_2ANOS_FEEDBACK)
+        st.session_state.estado = "PS_NAO_2ANOS_Q3"
+        add_bot(PS_NAO_2ANOS_Q3)
     elif estado == "PS_NAO_2ANOS_FEEDBACK":
+        # Compatibilidade com conversas iniciadas em versões anteriores.
         st.session_state.estado = "PS_NAO_2ANOS_Q3"
         add_bot(PS_NAO_2ANOS_Q3)
     elif estado == "PS_NAO_2ANOS_Q3":
@@ -1704,7 +1793,7 @@ def processar(resposta: str):
         elif opcao == "2" or "medicamento" in resp_n:
             dados["situacao"] = "medicamento negado"
             st.session_state.perguntas_ativas = [
-                PS_MED_Q1, PS_MED_Q2, PS_MED_Q3, PS_MED_Q4, PS_MED_Q5,
+                PS_MED_Q1, PS_MED_Q2, PS_MED_Q2B, PS_MED_Q3, PS_MED_Q4, PS_MED_Q5,
                 PS_MED_Q6, PS_MED_Q7, PS_MED_Q9, PS_MED_Q10
             ]
             st.session_state.pergunta_idx = 0
@@ -1765,7 +1854,7 @@ def processar(resposta: str):
             dados["situacao"] = "erro médico"
             st.session_state.perguntas_ativas = [
                 PS_ERRO_Q1, PS_ERRO_Q2, PS_ERRO_Q3,
-                PS_ERRO_Q4, PS_ERRO_Q5, PS_ERRO_Q6
+                PS_ERRO_Q4, PS_ERRO_Q5, PS_ERRO_Q6, PS_ERRO_Q7_ESTAGIO
             ]
             st.session_state.pergunta_idx = 0
             st.session_state.estado = "PS_PERGUNTAS_COLETOR"
@@ -1788,7 +1877,7 @@ def processar(resposta: str):
             dados["urgencia_plano_outro_feita"] = True
             outro_qs_preview = [
                 PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
-                PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
+                PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q5B, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
             ]
             proxima = outro_qs_preview[idx - 1] if idx - 1 < len(outro_qs_preview) else None
             _perguntar_escala_urgencia("PS_OUTRO_DEMANDA", proxima, "PS_OUTRO_DEMANDA", "plano_outro")
@@ -1796,7 +1885,7 @@ def processar(resposta: str):
 
         outro_qs = [
             PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
-            PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
+            PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q5B, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
         ]
         
         if idx < len(outro_qs) + 1:  # +1 porque Q1 já foi enviada
@@ -1823,6 +1912,27 @@ def processar(resposta: str):
         idx += 1
         st.session_state.pergunta_idx = idx
 
+        # Fluxo específico - Plano de Saúde / Bariátrica:
+        # após a resposta da segunda pergunta, envia a mensagem explicativa e, imediatamente,
+        # a escala de urgência, sem esperar resposta na mensagem explicativa.
+        if (
+            idx == 2
+            and not dados.get("urgencia_plano_coletor_feita")
+            and ("bari" in _n(dados.get("neg_cir_esp", "")) or str(dados.get("neg_cir_esp", "")).strip() == "2")
+        ):
+            dados["urgencia_plano_coletor_feita"] = True
+            add_bot(PS_BARI_Q3_MSG)
+            proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
+            _perguntar_escala_urgencia("PS_PERGUNTAS_COLETOR", proxima, "PS_PERGUNTAS_COLETOR", "plano_bariatrica")
+            return
+
+        # Prova social específica - Coparticipação: após a resposta à mensagem
+        # "pagando para usar", envia a mensagem com marcador da imagem A13.png
+        # e segue o fluxo normalmente.
+        if pergunta_atual == PS_COPA_Q2 and not dados.get("prova_social_copa_a13_enviada"):
+            dados["prova_social_copa_a13_enviada"] = True
+            add_bot(PS_PROVA_SOCIAL_COPA_A13)
+
         if idx == 3 and not dados.get("urgencia_plano_coletor_feita"):
             dados["urgencia_plano_coletor_feita"] = True
             proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
@@ -1833,12 +1943,25 @@ def processar(resposta: str):
         # Sempre que a pessoa responder à pergunta "A negativa do plano foi por escrita ou verbal...",
         # o robô deve AGUARDAR essa resposta e, somente depois, perguntar o motivo da negativa.
         if "escrita ou verbal" in _n(pergunta_atual):
-            st.session_state.estado = "PS_MOTIVO_NEGATIVA_GERAL"
-            add_bot(PS_MOTIVO_NEGATIVA_GERAL)
-            return
+            if not dados.get("motivo_negativa_ja_perguntado"):
+                st.session_state.estado = "PS_MOTIVO_NEGATIVA_GERAL"
+                add_bot(PS_MOTIVO_NEGATIVA_GERAL)
+                return
+            # Se o motivo já foi perguntado antes no fluxo, não repete.
+            while idx < len(st.session_state.perguntas_ativas) and "qual foi o motivo da negativa" in _n(st.session_state.perguntas_ativas[idx]):
+                idx += 1
+            st.session_state.pergunta_idx = idx
 
         if idx < len(st.session_state.perguntas_ativas):
-            add_bot(st.session_state.perguntas_ativas[idx])
+            proxima_pergunta = st.session_state.perguntas_ativas[idx]
+            # Coparticipação: a mensagem explicativa deve vir seguida imediatamente
+            # da pergunta sobre contrato, sem aguardar resposta entre as duas.
+            if "copart" in _n(dados.get("situacao", "")) and proxima_pergunta == PS_COPA_Q6:
+                add_bot(PS_COPA_Q6)
+                add_bot(PS_COPA_Q7)
+                st.session_state.pergunta_idx = idx + 1
+                return
+            add_bot(proxima_pergunta)
         else:
             # Fluxo específico de Reajuste: após responder sobre contrato do plano,
             # segue para escolha entre judicialização ou consultoria.
@@ -1964,6 +2087,7 @@ def processar(resposta: str):
     # ---- MOTIVO DA NEGATIVA APÓS ESCRITA/VERBAL ----
     elif estado == "PS_MOTIVO_NEGATIVA_GERAL":
         dados["motivo_negativa"] = resposta
+        dados["motivo_negativa_ja_perguntado"] = True
         idx = st.session_state.pergunta_idx
 
         # Evita repetir a pergunta de motivo caso ela já exista como próxima pergunta no fluxo.
@@ -2028,6 +2152,7 @@ def processar(resposta: str):
     elif estado == "PS_REP_EMPATIA":
         dados["rep_q3"] = resposta
         add_bot(PS_REP_OBRIGADA)
+        add_bot(PS_REP_PROVA_SOCIAL_A1)
         st.session_state.estado = "PS_REP_Q4"
         add_bot(PS_REP_Q4)
     elif estado == "PS_REP_Q4":
@@ -2061,19 +2186,21 @@ def processar(resposta: str):
         if "endometriose" in _n(resposta) or "1" in resposta:
             st.session_state.perguntas_ativas = [PS_ENDO_Q1, PS_ENDO_Q2, PS_ENDO_Q3, PS_ENDO_Q4, PS_ENDO_Q5]
         elif "bariátrica" in _n(resposta) or "bariatrica" in _n(resposta) or "2" in resposta:
+            # Bariátrica: a mensagem explicativa vem imediatamente seguida da escala de urgência,
+            # sem aguardar resposta nela. Depois da escala, o fluxo pergunta sobre acompanhamento multidisciplinar.
             st.session_state.perguntas_ativas = [
-                PS_BARI_Q1, PS_BARI_Q2, PS_BARI_Q3_MSG, PS_BARI_Q3,
+                PS_BARI_Q1, PS_BARI_Q2, PS_BARI_Q3_PERGUNTA,
                 PS_BARI_Q4, PS_BARI_Q5, PS_BARI_Q6
             ]
         elif "oncologia" in _n(resposta) or "3" in resposta:
             st.session_state.perguntas_ativas = [PS_ONCO_Q1, PS_ONCO_Q2, PS_ONCO_Q3, PS_ONCO_Q4, PS_ONCO_Q5, PS_ONCO_Q6]
         elif "cardiologia" in _n(resposta) or "4" in resposta:
-            st.session_state.perguntas_ativas = [PS_CARDIO_Q1, PS_CARDIO_Q2, PS_CARDIO_Q3, PS_CARDIO_Q4, PS_CARDIO_Q5, PS_CARDIO_Q6]
+            st.session_state.perguntas_ativas = [PS_CARDIO_Q1, PS_CARDIO_Q3, PS_CARDIO_Q4, PS_CARDIO_Q5, PS_CARDIO_Q6]
         elif "neurocirurgia" in _n(resposta) or "5" in resposta:
             # Neurocirurgia sem a pergunta do material
             st.session_state.perguntas_ativas = [PS_NEURO_Q1, PS_NEURO_Q2, PS_NEURO_Q3, PS_NEURO_Q4, PS_NEURO_Q5, PS_NEURO_Q7]
         elif "ortopedia" in _n(resposta) or "6" in resposta:
-            st.session_state.perguntas_ativas = [PS_ORTO_Q1, PS_ORTO_Q2, PS_ORTO_Q3, PS_ORTO_Q4, PS_ORTO_Q5, PS_ORTO_Q6]
+            st.session_state.perguntas_ativas = [PS_ORTO_Q1, PS_ORTO_Q2, PS_ORTO_Q3, PS_ORTO_Q5, PS_ORTO_Q6]
         elif "oftalmologia" in _n(resposta) or "7" in resposta:
             st.session_state.perguntas_ativas = [PS_OFTAL_Q1, PS_OFTAL_Q2, PS_OFTAL_Q3, PS_OFTAL_Q4, PS_OFTAL_Q5]
         else:
@@ -2089,6 +2216,29 @@ def processar(resposta: str):
     # ---- AGUARDA RESPOSTA APÓS PONTO CRÍTICO ----
     elif estado == "PS_PONTO_CRITICO_AGUARDANDO":
         dados["ponto_critico_resposta"] = resposta
+        esp_n = _n(dados.get("neg_cir_esp", ""))
+        if not dados.get("prova_social_neg_cir_enviada"):
+            if "bari" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "2":
+                add_bot(PS_PROVA_SOCIAL_BARI_A3)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "endometriose" in esp_n or "adenomiose" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "1":
+                add_bot(PS_PROVA_SOCIAL_ENDO_A2)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "onco" in esp_n or "câncer" in esp_n or "cancer" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "3":
+                add_bot(PS_PROVA_SOCIAL_ONCO_A4)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "cardio" in esp_n or "coração" in esp_n or "coracao" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "4":
+                add_bot(PS_PROVA_SOCIAL_CARDIO_A5)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "neuro" in esp_n or "neurologia" in esp_n or "neurocirurgia" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "5":
+                add_bot(PS_PROVA_SOCIAL_NEURO_A6)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "orto" in esp_n or "ortopedia" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "6":
+                add_bot(PS_PROVA_SOCIAL_ORTO_A7)
+                dados["prova_social_neg_cir_enviada"] = True
+            elif "oftal" in esp_n or "oftalmologia" in esp_n or str(dados.get("neg_cir_esp", "")).strip() == "7":
+                add_bot(PS_PROVA_SOCIAL_OFTAL_A8)
+                dados["prova_social_neg_cir_enviada"] = True
         situacao_raw = dados.get("situacao", "")
         situacao_n = _n(situacao_raw)
         # Para negativa de cirurgia, só agora pergunta sobre material/protese.
