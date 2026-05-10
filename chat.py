@@ -126,8 +126,16 @@ def init_session():
         st.session_state.proxima_mensagem_24h_time = None
     if "agendamento_reuniao_data" not in st.session_state:
         st.session_state.agendamento_reuniao_data = None
+    if "urgencia_retorno_estado" not in st.session_state:
+        st.session_state.urgencia_retorno_estado = None
+    if "urgencia_proxima_msg" not in st.session_state:
+        st.session_state.urgencia_proxima_msg = None
+    if "urgencia_proximo_estado" not in st.session_state:
+        st.session_state.urgencia_proximo_estado = None
+    if "urgencia_chave" not in st.session_state:
+        st.session_state.urgencia_chave = None
 
-def add_bot(msg, delay=5):
+def add_bot(msg, delay=0):
     if msg:
         msg = msg.replace("{nome}", st.session_state.nome or "")
         msg = msg.replace("{lawyer}", L)
@@ -137,7 +145,7 @@ def add_bot(msg, delay=5):
         # Corrige dupla substituição
         if "<strong>" in msg and "**" in msg:
             msg = msg.replace("**", "")
-        time.sleep(delay)
+        # Resposta imediata: sem espera artificial entre mensagens do robô.
         st.session_state.messages.append({"role": "bot", "content": msg})
         # inicia/renova o contador para enviar "Ainda está por aqui?"
         # caso o cliente não responda em até 5 minutos após a última mensagem do robô
@@ -235,7 +243,7 @@ def verificar_pergunta_resultados(resposta: str) -> bool:
         "vocês já ganharam", "voces ja ganharam", "vocês já ganharam causas", "voces ja ganharam causas",
         "causas assim", "casos assim", "tenho medo de perder",
         "medo de perder", "tenho medo de gastar", "tenho medo de investir",
-        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder"
+        "tenho medo de pagar", "gastar e perder", "investir e perder", "pagar e perder", "é ganho de causa", "e ganho de causa", "ganho de causa"
     ]
     return any(palavra in _n(resposta) for palavra in palavras_chave)
 
@@ -443,7 +451,7 @@ MSG_EXPLICACAO_SUS = (
 )
 
 MSG_HONORARIOS_SUS = (
-    "Como é um trabalho de alta especialidade, o escritório cobra Honorários Iniciais "
+    "Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais "
     "para assumir o caso e entrar com um processo judicial. Prosseguir com esse caso faz sentido "
     "para você garantir sua saúde hoje e sair dessa espera?"
 )
@@ -998,7 +1006,7 @@ MSG_PRE_POS_BUSCA_1 = (
 )
 
 MSG_PRE_POS_BUSCA_2 = (
-    "Aqui no escritório, a gente atua exatamente com esse tipo de situação, tanto na parte de orientação quanto na judicialização, quando necessário.\n"
+    "Aqui no escritório, atuamos exatamente com esse tipo de situação, tanto na parte de orientação quanto na judicialização, quando necessário.\n"
     "Cada caso tem detalhes importantes que fazem toda a diferença no resultado por isso eu preciso entender exatamente em que momento você está agora."
 )
 
@@ -1027,7 +1035,7 @@ PS_OP2_INTRO = (
     "Como você ainda não tem a negativa oficial do plano, você tem dois caminhos possíveis para seguir agora e eu quero te ajudar a escolher o mais seguro:"
 )
 PS_OP2_CAMINHO_1 = (
-    "1️⃣ Você pode tentar solicitar sozinho(a) diretamente ao plano de saúde, buscando a autorização do procedimento, medicamento, cirurgia ou tratamento por conta própria."
+    "1️⃣ Você pode tentar solicitar sozinho(a) diretamente ao plano de saúde, buscando a autorização do procedimento, medicamento, cirurgia ou tratamento por conta própria, e ao receber a negativa, você retorna o contato conosco."
 )
 PS_OP2_CAMINHO_2 = (
     "2️⃣ Ou pode contar com a nossa Assessoria Jurídica desde o início do processo, para que o escritório acompanhe estrategicamente todas as etapas, orientando sobre pedidos, documentos, relatórios médicos, protocolos e a forma correta de conduzir a solicitação perante o plano de saúde.\n\n"
@@ -1257,6 +1265,34 @@ def get_nome_especialidade(valor):
     }
     return mapa.get(valor, valor)
 
+
+MSG_ESCALA_URGENCIA = (
+    "Em uma escala de 1 a 5, o quanto esse problema é urgente para você hoje?\n\n"
+    "1️⃣ 1\n2️⃣ 2\n3️⃣ 3\n4️⃣ 4\n5️⃣ 5"
+)
+
+def _perguntar_escala_urgencia(retorno_estado: str, proxima_msg: str = None, proximo_estado: str = None, chave: str = None):
+    """Pausa o fluxo após a terceira pergunta da área e coleta a urgência de 1 a 5."""
+    st.session_state.urgencia_retorno_estado = retorno_estado
+    st.session_state.urgencia_proxima_msg = proxima_msg
+    st.session_state.urgencia_proximo_estado = proximo_estado or retorno_estado
+    st.session_state.urgencia_chave = chave or retorno_estado
+    st.session_state.estado = "ESCALA_URGENCIA"
+    add_bot(MSG_ESCALA_URGENCIA)
+
+def _retomar_apos_escala_urgencia(resposta: str):
+    chave = st.session_state.get("urgencia_chave") or "geral"
+    st.session_state.dados[f"urgencia_{chave}"] = resposta
+    proximo_estado = st.session_state.get("urgencia_proximo_estado") or st.session_state.get("urgencia_retorno_estado")
+    proxima_msg = st.session_state.get("urgencia_proxima_msg")
+    st.session_state.urgencia_retorno_estado = None
+    st.session_state.urgencia_proxima_msg = None
+    st.session_state.urgencia_proximo_estado = None
+    st.session_state.urgencia_chave = None
+    st.session_state.estado = proximo_estado
+    if proxima_msg:
+        add_bot(proxima_msg)
+
 # ============================================
 # PROCESSAMENTO DO FLUXO
 # ============================================
@@ -1267,6 +1303,11 @@ def processar(resposta: str):
 
     # Atualiza timestamp da última resposta do usuário
     st.session_state.aguardando_resposta_desde = None
+
+    # Resposta à escala de urgência inserida após a terceira pergunta da área
+    if estado == "ESCALA_URGENCIA":
+        _retomar_apos_escala_urgencia(resposta)
+        return
 
     # Verificar se é pergunta sobre resultados (prioridade)
     if estado not in ("INICIO", "PERGUNTA_RESULTADOS") and verificar_pergunta_resultados(resposta):
@@ -1345,8 +1386,8 @@ def processar(resposta: str):
         add_bot(MSG_SUS_CONSULTA_Q3)
     elif estado == "SUS_CONSULTA_Q3":
         dados["consulta_q3"] = resposta
-        st.session_state.estado = "SUS_CONSULTA_PITCH"
-        add_bot(MSG_SUS_CONSULTA_PITCH)
+        _perguntar_escala_urgencia("SUS_CONSULTA_PITCH", MSG_SUS_CONSULTA_PITCH, "SUS_CONSULTA_PITCH", "sus_consulta")
+        return
     elif estado == "SUS_CONSULTA_PITCH":
         if "aguardar" in _n(resposta) or "não" in _n(resposta):
             add_bot(MSG_ENCERRAMENTO_SUS)
@@ -1384,7 +1425,7 @@ def processar(resposta: str):
     elif estado == "SUS_CONSULTA_PROTOCOLO":
         if _sim(resposta):
             st.session_state.estado = "SUS_CONSULTA_HONORARIOS"
-            add_bot("Como é um trabalho de alta especialidade, o escritório cobra Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
+            add_bot("Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
@@ -1418,6 +1459,11 @@ def processar(resposta: str):
         dados[f"exame_resp_{idx}"] = resposta
         idx += 1
         st.session_state.pergunta_idx = idx
+        if idx == 3 and not dados.get("urgencia_sus_exame_feita"):
+            dados["urgencia_sus_exame_feita"] = True
+            proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
+            _perguntar_escala_urgencia("SUS_EXAME_PERGUNTAS", proxima, "SUS_EXAME_PERGUNTAS", "sus_exame")
+            return
         if idx < len(st.session_state.perguntas_ativas):
             add_bot(st.session_state.perguntas_ativas[idx])
         else:
@@ -1436,7 +1482,7 @@ def processar(resposta: str):
     elif estado == "SUS_EXAME_PROTOCOLO":
         if _sim(resposta):
             st.session_state.estado = "SUS_EXAME_HONORARIOS"
-            add_bot("Como é um trabalho de alta especialidade, o escritório cobra Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
+            add_bot("Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
@@ -1496,6 +1542,12 @@ def processar(resposta: str):
                 idx += 1
                 st.session_state.pergunta_idx = idx
         
+        if idx == 3 and not dados.get("urgencia_sus_cirurgia_feita"):
+            dados["urgencia_sus_cirurgia_feita"] = True
+            proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
+            _perguntar_escala_urgencia("SUS_PERGUNTAS", proxima, "SUS_PERGUNTAS", "sus_cirurgia")
+            return
+
         if idx < len(st.session_state.perguntas_ativas):
             next_q = st.session_state.perguntas_ativas[idx]
             add_bot(next_q)
@@ -1605,8 +1657,8 @@ def processar(resposta: str):
         add_bot(PS_NAO_2ANOS_Q3)
     elif estado == "PS_NAO_2ANOS_Q3":
         dados["urgencia_medica"] = resposta
-        st.session_state.estado = "PS_NAO_2ANOS_Q4"
-        add_bot(PS_NAO_2ANOS_Q4)
+        _perguntar_escala_urgencia("PS_NAO_2ANOS_Q4", PS_NAO_2ANOS_Q4, "PS_NAO_2ANOS_Q4", "plano_menos_2_anos")
+        return
     elif estado == "PS_NAO_2ANOS_Q4":
         dados["conhecia_doenca"] = resposta
         st.session_state.estado = "PS_NAO_2ANOS_Q5"
@@ -1732,6 +1784,16 @@ def processar(resposta: str):
         idx += 1
         st.session_state.outro_idx = idx
         
+        if idx == 3 and not dados.get("urgencia_plano_outro_feita"):
+            dados["urgencia_plano_outro_feita"] = True
+            outro_qs_preview = [
+                PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
+                PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
+            ]
+            proxima = outro_qs_preview[idx - 1] if idx - 1 < len(outro_qs_preview) else None
+            _perguntar_escala_urgencia("PS_OUTRO_DEMANDA", proxima, "PS_OUTRO_DEMANDA", "plano_outro")
+            return
+
         outro_qs = [
             PS_OUTRO_DEMANDA_Q2, PS_OUTRO_DEMANDA_Q3, PS_OUTRO_DEMANDA_Q4,
             PS_OUTRO_DEMANDA_Q5, PS_OUTRO_DEMANDA_Q6, PS_OUTRO_DEMANDA_Q7
@@ -1760,6 +1822,12 @@ def processar(resposta: str):
         dados[f"resp_{idx}"] = resposta
         idx += 1
         st.session_state.pergunta_idx = idx
+
+        if idx == 3 and not dados.get("urgencia_plano_coletor_feita"):
+            dados["urgencia_plano_coletor_feita"] = True
+            proxima = st.session_state.perguntas_ativas[idx] if idx < len(st.session_state.perguntas_ativas) else None
+            _perguntar_escala_urgencia("PS_PERGUNTAS_COLETOR", proxima, "PS_PERGUNTAS_COLETOR", f"plano_{_n(dados.get('situacao', 'geral')).replace(' ', '_')}")
+            return
 
         # Regra global - Plano de Saúde:
         # Sempre que a pessoa responder à pergunta "A negativa do plano foi por escrita ou verbal...",
@@ -1927,8 +1995,8 @@ def processar(resposta: str):
         add_bot(PS_REP_KG_PERDIDOS)
     elif estado == "PS_REP_KG_PERDIDOS":
         dados["rep_kg_perdidos"] = resposta
-        st.session_state.estado = "PS_REP_EMPATIA"
-        add_bot(PS_REP_EMPATIA)
+        _perguntar_escala_urgencia("PS_REP_EMPATIA", PS_REP_EMPATIA, "PS_REP_EMPATIA", "plano_reparadora")
+        return
     elif estado == "PS_REP_FALTAM_KG":
         # Compatibilidade com conversas iniciadas em versões anteriores.
         dados["rep_faltam_kg"] = resposta
@@ -2073,7 +2141,7 @@ def processar(resposta: str):
             st.session_state.estado = "PS_OP3_PAGAMENTO"
             add_bot(PS_OP3_PAGAMENTO)
         else:
-            add_bot(PS_ENCERRAMENTO)
+            add_bot("Entendo perfeitamente. Cada decisão tem o seu tempo certo. Vou encerrar seu atendimento por aqui, mas saiba que nossos canais continuam abertos. Caso você mude de ideia ou sinta que o momento de agir chegou, é só me chamar.")
             st.session_state.estado = "FIM"
 
     elif estado == "PS_OP3_PAGAMENTO":
@@ -2233,6 +2301,12 @@ def main():
             with c1: btn("🏥 SUS", "SUS")
             with c2: btn("📋 Plano de Saúde", "Plano de Saúde")
 
+        elif estado == "ESCALA_URGENCIA":
+            cols = st.columns(5)
+            for i in range(1, 6):
+                with cols[i-1]:
+                    btn(str(i), str(i))
+
         elif estado == "SUS_DEMANDA":
             c1, c2 = st.columns(2)
             with c1: btn("🔪 Cirurgia / Tratamento", "Cirurgia")
@@ -2378,8 +2452,8 @@ def main():
 
         elif estado == "PS_OP2_DECISAO":
             c1, c2 = st.columns(2)
-            with c1: btn("✅ SIM", "SIM")
-            with c2: btn("❌ NÃO", "NÃO")
+            with c1: btn("👤 VOU FAZER SOZINHO", "NÃO")
+            with c2: btn("⚖️ QUERO A ASSESSORIA", "SIM")
 
         elif estado == "PS_OP3_CONSULTORIA":
             c1, c2 = st.columns(2)
