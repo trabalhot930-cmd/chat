@@ -527,13 +527,15 @@ MSG_HONORARIOS_SUS = (
     "para você garantir sua saúde hoje e sair dessa espera?"
 )
 
+
+MSG_INVESTIMENTO_JURIDICO = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
 MSG_REVERTER_SUS = (
     "Nesse caso só é possível revertermos a negativa/demora do SUS com medidas judiciais. "
     "Você está no momento exato de agirmos para buscar o seu direito judicialmente. "
-    "Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei. "
-    "O próximo passo agora é uma reunião rápida para eu te explicar como funciona o processo e valores de honorários. "
-    "Não se preocupe, é uma reunião gratuita e on-line."
+    "Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei."
 )
+
+MSG_SUS_ENCAMINHAR_DRA = "Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
 
 MSG_SIM_HONORARIOS_SUS_DECISAO = (
     "Antes de agendarmos a nossa reunião: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
@@ -1281,6 +1283,8 @@ PS_POS_BUSCA = (
     "3️⃣ Preciso de uma consultoria jurídica: Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória."
 )
 
+PS_POS_BUSCA_FINAL = "Pronto! Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
+
 # Mensagens das opções (atualizadas)
 PS_OP1_PERGUNTA = (
     "Compreendo. A negativa formal é o ponto de partida para a nossa intervenção estratégica. "
@@ -1954,8 +1958,8 @@ def processar(resposta: str):
     elif estado == "HONORARIOS_SUS":
         if _sim(resposta):
             add_bot(MSG_REVERTER_SUS)
-            st.session_state.estado = "DECISAO_COMPARTILHADA"
-            add_bot(MSG_SIM_HONORARIOS_SUS_DECISAO)
+            add_bot(MSG_SUS_ENCAMINHAR_DRA)
+            st.session_state.estado = "FIM"
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
@@ -2642,20 +2646,17 @@ def processar(resposta: str):
 
     # ---- POS BUSCA (opções 1-3) ----
     elif estado == "PS_POS_BUSCA":
-        if "1" in resposta:
-            add_bot(PS_OP1_PERGUNTA)
-            add_bot(PS_OP1_REUNIAO)
-            st.session_state.estado = "DECISAO_COMPARTILHADA"
-            add_bot(MSG_SIM_HONORARIOS_SUS_DECISAO)
-        elif "2" in resposta:
-            add_bot(PS_OP2_INTRO)
-            add_bot(PS_OP2_CAMINHO_1)
-            add_bot(PS_OP2_CAMINHO_2)
-            st.session_state.estado = "PS_OP2_DECISAO"
-            add_bot(PS_OP2_DECISAO)
-        elif "3" in resposta:
-            st.session_state.estado = "PS_OP3_CONSULTORIA"
-            add_bot(PS_OP3_CONSULTORIA)
+        resp_norm = _n(resposta)
+        if (
+            "1" in resposta
+            or "2" in resposta
+            or "3" in resposta
+            or "negativa" in resp_norm
+            or "preparar" in resp_norm
+            or "consultoria" in resp_norm
+        ):
+            add_bot(PS_POS_BUSCA_FINAL)
+            st.session_state.estado = "FIM"
         else:
             add_bot(PS_POS_BUSCA)
 
