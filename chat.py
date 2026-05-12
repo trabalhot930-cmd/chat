@@ -369,7 +369,7 @@ def enviar_resposta_usuario(resposta: str, exibicao: str = None):
 
 MSG_BOAS_VINDAS = (
     "Olá, tudo bem com você?\n\n"
-    "Sou a Aurora, assistente jurídica do escritório da Dra Lethicia. 🌹\n\n"
+    "Sou a Aurora, assistente jurídica do escritório da Dra. Lethicia. 🌹\n\n"
     "Qual o seu nome?"
 )
 
@@ -472,6 +472,8 @@ PERGUNTAS_BARIATRICA_SUS = [
     "Entendi... vamos ver isso com calma 💙.\n\nVocê já tem indicação médica para cirurgia bariátrica?",
     "Você tem algum laudo ou relatório médico indicando a cirurgia?",
     "Só pra eu entender melhor seu caso:\n\nVocê sabe me informar seu peso e altura? (Pode ser aproximado).",
+    "Você tem doenças associadas, como pressão alta, diabetes ou dores nas articulações?",
+    "Você tem exames que demonstram a sua condição atual?",
     "Essa parte é bem importante:\n\nVocê já tentou outros tratamentos antes, como dieta, acompanhamento ou medicamentos? Como foi essa experiência?",
     "Você já está na fila de espera do SUS há quanto tempo? Você possui o comprovante de que está aguardando na fila?\n\nPode ser o print da tela do App Meu SUS Digital, o comprovante de agendamento da Secretaria de Saúde ou o papel da regulação (SISREG) com o número do seu protocolo."
 ]
@@ -521,11 +523,7 @@ MSG_EXPLICACAO_SUS = (
     "Isso faria diferença na sua vida agora?"
 )
 
-MSG_HONORARIOS_SUS = (
-    "Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais "
-    "para assumir o caso e entrar com um processo judicial. Prosseguir com esse caso faz sentido "
-    "para você garantir sua saúde hoje e sair dessa espera?"
-)
+MSG_HONORARIOS_SUS = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
 
 
 MSG_INVESTIMENTO_JURIDICO = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
@@ -535,7 +533,7 @@ MSG_REVERTER_SUS = (
     "Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei."
 )
 
-MSG_SUS_ENCAMINHAR_DRA = "Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
+MSG_SUS_ENCAMINHAR_DRA = "Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
 
 MSG_SIM_HONORARIOS_SUS_DECISAO = (
     "Antes de agendarmos a nossa reunião: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
@@ -579,7 +577,7 @@ MSG_SUS_CONSULTA_AJUDA_Q4 = (
     "Para a Dra. Lethicia validar o seu protocolo de urgência, você possui o print do App Meu SUS Digital ou o comprovante da fila de espera ou o comprovante do SISREG?"
 )
 MSG_SUS_CONSULTA_AJUDA_Q4B = (
-    "Você tem o pedido/encaminhamento do Médico pra sua consulta?"
+    "Você tem o pedido/encaminhamento do médico para sua consulta?"
 )
 MSG_SUS_CONSULTA_PROTOCOLO = (
     "Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. "
@@ -690,14 +688,14 @@ PS_SITUACAO = (
 # ============================================
 PS_REP_Q1 = "Você realizou a cirurgia bariátrica ou teve uma perda de peso expressiva através de dieta, exercícios ou uso das canetas emagrecedoras (Mounjaro, Ozempic, Tirzepatida...)?"
 PS_REP_Q2 = "Você já chegou ou ainda falta pouco pro peso que gostaria?\n\n1️⃣ Já cheguei à minha meta\n2️⃣ Ainda não"
-PS_REP_FALTAM_META = "Faltam quantos quilos pra você chegar a meta de peso que gostaria?"
+PS_REP_FALTAM_META = "Faltam quantos quilos pra você chegar à meta de peso que gostaria?"
 PS_REP_KG_PERDIDOS = "Quantos kg você perdeu no processo de emagrecimento?"
 
 PS_REP_MAIS6_PARABENS = (
     "Primeiramente, quero te dar os parabéns! Esse processo de emagrecimento é uma jornada de saúde incrível. "
     "A pressa agora pode ser inimiga do resultado: o mais importante é que você chegue na fase das reparadoras "
     "com o peso estabilizado e total segurança.\n\n"
-    "Me conta quantos kilos você já perdeu até agora?!"
+    "Me conta quantos quilos você já perdeu até agora?!"
 )
 
 PS_REP_MAIS6_MITO = (
@@ -734,13 +732,13 @@ PS_REP_MAIS6_ATENDIMENTO = (
 )
 
 PS_REP_MAIS6_INVESTIMENTO = (
-    "O investimento no atendimento particular é de R$ 97,00 e é feito online.\n\n"
+    "O investimento no atendimento particular é de R$ 97,00 e é feito on-line.\n\n"
     "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
     "• Estratégia Jurídica: Prova técnica de que seu caso é obrigatório pelo plano, com base na lei e nas decisões judiciais mais recentes.\n"
     "• Análise de Viabilidade: Avaliação real das chances de sucesso do seu caso e orientações sobre como corrigir falhas que podem levar à negativa do plano OU da justiça.\n"
     "• Guia de Direcionamento: Orientação sobre quais tipos de especialistas e exames você deve buscar para montar um dossiê forte, e onde focar para conseguir a documentação necessária.\n"
     "• Análise de Viabilidade: Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n\n"
-    "Podemos marcar um horário pra você na agenda da Dra Lethicia?"
+    "Podemos marcar um horário pra você na agenda da Dra. Lethicia?"
 )
 
 PS_REP_MAIS6_ENCERRAMENTO = (
@@ -829,7 +827,7 @@ PS_REP_ACOMPANHAMENTO = (
 
 # MENSAGEM DO ACOMPANHAMENTO JURÍDICO
 MSG_ACOMPANHAMENTO_JURIDICO = (
-    "Com o acompanhamento jurídico, você tem as orientações corretas sobre quais médicos deve ir e como que deve ser feitos os laudos, "
+    "Com o acompanhamento jurídico, você tem as orientações corretas sobre quais médicos deve ir e como devem ser feitos os laudos, "
     "o que você deve fazer na perícia do plano de saúde (se for solicitado no seu caso), isso tudo sendo organizado agora, "
     "após a negativa do plano, você já vai ter todos os laudos e documentos corretos pra um processo judicial, "
     "assim não precisa corrigir ou ficar correndo atrás de laudos depois. Entende?"
@@ -1002,7 +1000,7 @@ PS_REAJ_JUDICIALIZAR_1 = (
 )
 
 PS_REAJ_JUDICIALIZAR_2 = (
-    "O próximo passo agora é uma conversa direto com a Dra Lethicia para ela te explicar como funciona o processo e os valores de honorários para a sua demanda. "
+    "O próximo passo agora é uma conversa direta com a Dra. Lethicia para ela te explicar como funciona o processo e os valores de honorários para a sua demanda. "
     "Não se preocupe, essa análise inicial por aqui é gratuita e rápida."
 )
 
@@ -1021,7 +1019,7 @@ PS_REAJ_PAGAMENTO = (
     "Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?"
 )
 
-PS_REAJ_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
+PS_REAJ_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia."
 
 # ============================================
 # 8. COPARTICIPAÇÃO
@@ -1125,7 +1123,7 @@ PS_ERRO_PAGAMENTO = (
     "Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?"
 )
 
-PS_ERRO_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
+PS_ERRO_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia."
 
 # ============================================
 # 10. OUTRO (plano) - FLUXO CORRIGIDO
@@ -1327,7 +1325,7 @@ PS_OP3_PAGAMENTO = (
     "Perfeito! Vamos reservar o seu horário.\n\n"
     "Como deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?"
 )
-PS_OP3_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia."
+PS_OP3_CONFIRMACAO = "Ao realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia."
 
 # Opção 4 removida - agora temos apenas 3 opções
 
@@ -1752,7 +1750,7 @@ def processar(resposta: str):
     elif estado == "SUS_CONSULTA_PROTOCOLO":
         if _sim(resposta):
             st.session_state.estado = "SUS_CONSULTA_HONORARIOS"
-            add_bot("Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
+            add_bot(MSG_INVESTIMENTO_JURIDICO)
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
@@ -1822,7 +1820,7 @@ def processar(resposta: str):
     elif estado == "SUS_EXAME_PROTOCOLO":
         if _sim(resposta):
             st.session_state.estado = "SUS_EXAME_HONORARIOS"
-            add_bot("Como é um trabalho de alta especialidade, o escritório cobra um valor de Honorários Iniciais para assumir o caso e protocolar o pedido judicial. Prosseguir com esse caso faz sentido para você garantir sua saúde hoje e sair dessa espera?")
+            add_bot(MSG_INVESTIMENTO_JURIDICO)
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
@@ -2028,6 +2026,7 @@ def processar(resposta: str):
         dados["negativa_escrita"] = resposta
         # Envia mensagens pré-pos busca
         add_bot(MSG_PRE_POS_BUSCA_1)
+        add_bot(MSG_INVESTIMENTO_JURIDICO)
         add_bot(MSG_PRE_POS_BUSCA_2)
         st.session_state.estado = "PS_POS_BUSCA"
         add_bot(PS_POS_BUSCA)
@@ -2163,11 +2162,13 @@ def processar(resposta: str):
                 if q == PS_OUTRO_DEMANDA_Q7:
                     # Após última pergunta, envia mensagens pré-pos busca
                     add_bot(MSG_PRE_POS_BUSCA_1)
+                    add_bot(MSG_INVESTIMENTO_JURIDICO)
                     add_bot(MSG_PRE_POS_BUSCA_2)
                     st.session_state.estado = "PS_POS_BUSCA"
                     add_bot(PS_POS_BUSCA)
         else:
             add_bot(MSG_PRE_POS_BUSCA_1)
+            add_bot(MSG_INVESTIMENTO_JURIDICO)
             add_bot(MSG_PRE_POS_BUSCA_2)
             st.session_state.estado = "PS_POS_BUSCA"
             add_bot(PS_POS_BUSCA)
@@ -2510,10 +2511,10 @@ def processar(resposta: str):
     elif estado == "PS_CONSULTA_97_PAGAMENTO":
         n = _n(resposta)
         if "cartão" in n or "cartao" in n or "crédito" in n or "credito" in n:
-            add_bot(f"✅ Aqui está o link para pagamento via Cartão de Crédito:\n\n{LINK_CARTAO_97}\n\nAo realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia.")
+            add_bot(f"✅ Aqui está o link para pagamento via Cartão de Crédito:\n\n{LINK_CARTAO_97}\n\nAo realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia.")
             st.session_state.estado = "FIM"
         elif "pix" in n:
-            add_bot(f"✅ Aqui está o link para pagamento via Pix:\n\n{LINK_PIX_97}\n\nAo realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra Lethicia.")
+            add_bot(f"✅ Aqui está o link para pagamento via Pix:\n\n{LINK_PIX_97}\n\nAo realizar o pagamento e for dado baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia.")
             st.session_state.estado = "FIM"
         else:
             add_bot(PS_CONSULTA_PAGA_97)
@@ -2632,6 +2633,7 @@ def processar(resposta: str):
                     else:
                         add_bot(PS_PROVA_SOCIAL_TEA_A11)
             add_bot(MSG_PRE_POS_BUSCA_1)
+            add_bot(MSG_INVESTIMENTO_JURIDICO)
             add_bot(MSG_PRE_POS_BUSCA_2)
             st.session_state.estado = "PS_POS_BUSCA"
             add_bot(PS_POS_BUSCA)
@@ -2640,6 +2642,7 @@ def processar(resposta: str):
     elif estado == "PS_NEG_MATERIAL":
         dados["neg_material"] = resposta
         add_bot(MSG_PRE_POS_BUSCA_1)
+        add_bot(MSG_INVESTIMENTO_JURIDICO)
         add_bot(MSG_PRE_POS_BUSCA_2)
         st.session_state.estado = "PS_POS_BUSCA"
         add_bot(PS_POS_BUSCA)
