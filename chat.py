@@ -178,6 +178,10 @@ def init_session():
         st.session_state.urgencia_proximo_estado = None
     if "urgencia_chave" not in st.session_state:
         st.session_state.urgencia_chave = None
+    if "investimento_proximo_estado" not in st.session_state:
+        st.session_state.investimento_proximo_estado = None
+    if "investimento_proximas_mensagens" not in st.session_state:
+        st.session_state.investimento_proximas_mensagens = []
 
 def add_bot(msg, delay=0):
     if msg:
@@ -207,6 +211,14 @@ def reset():
     add_bot(MSG_BOAS_VINDAS)
 
 # Função para verificar e enviar mensagem de 5 min sem resposta
+
+def solicitar_investimento(proximo_estado=None, proximas_mensagens=None):
+    """Faz a pergunta de investimento e pausa o fluxo até a pessoa responder."""
+    st.session_state.investimento_proximo_estado = proximo_estado
+    st.session_state.investimento_proximas_mensagens = proximas_mensagens or []
+    st.session_state.estado = "AGUARDANDO_INVESTIMENTO"
+    add_bot(MSG_INVESTIMENTO_JURIDICO)
+
 def check_no_response_timeout():
     """Envia automaticamente “Ainda está por aqui?” quando o cliente fica 5 minutos sem responder.
 
@@ -379,12 +391,25 @@ MSG_CANAL = "Olá, {nome}! Seu atendimento é pelo SUS ou por Plano de Saúde?"
 # MENSAGENS DE VALORES (INTERCEPTAÇÃO) - ATUALIZADAS
 # ============================================
 MSG_VALORES_CIRURGIA = (
-    "Eu entendo que o valor é um ponto importante, mas pense comigo: quanto vale uma estratégia jurídica que realmente garante o seu tratamento contra um sistema que quer te ver desistir? O seu caso exige um olhar personalizado e de alto nível. A Dra. Lethicia Fernanda trata casos de alta complexidade, que envolvem o seu bem-estar e o seu futuro, de forma individualizada, por isso ela faz questão de analisar pessoalmente o seu relato. Para que ela possa verificar a viabilidade do seu direito e te explicar como faremos para você ter o atendimento correto para sua saúde, eu acabo de encaminhar seus dados para ela. Pode ficar tranquilo(a), esse primeiro contato de retorno serve para validarmos o seu caso e darmos início ao suporte. Em breve, a própria Dra. entrará em contato por aqui para realizar o seu atendimento, onde ela vai explicar os próximos passos e os valores para sua contratação, ok? 🌹"
+    "Eu entendo que o valor é importante, mas deixe-me te fazer uma pergunta: quanto vale uma estratégia jurídica que realmente garante o seu tratamento contra um sistema que quer te ver desistir?\n\n"
+    "O seu caso exige uma estratégia jurídica personalizada e de alto nível. A Dra. Lethicia Fernanda entende que casos de alta complexidade, que envolvem o seu bem-estar e o seu futuro, devem ser tratados de forma personalizada.\n\n"
+    "Precisamos de uma Reunião de Viabilização Jurídica rápida, de 20 minutos, via vídeo. É o momento onde ela vai alinhar o investimento necessário e, principalmente, te mostrar como vamos fazer pra você ter um atendimento correto para sua saúde.\n\n"
+    "Fique tranquilo(a), esse primeiro contato é gratuito. Pra você marcar essa reunião, basta seguir com a nossa conversa, certo?"
 )
 
-MSG_VALORES_CONSULTA = MSG_VALORES_CIRURGIA
+MSG_VALORES_CONSULTA = (
+    "Eu entendo que o valor é importante, mas deixe-me te fazer uma pergunta: quanto vale uma estratégia jurídica que realmente garante o seu exame contra um sistema que quer te ver desistir?\n\n"
+    "O seu caso exige uma estratégia jurídica personalizada e de alto nível. A Dra. Lethicia Fernanda entende que casos de alta complexidade, que envolvem o seu bem-estar e o seu futuro, devem ser tratados de forma personalizada.\n\n"
+    "Precisamos de uma Reunião de Viabilização Jurídica rápida, de 20 minutos, via vídeo. É o momento onde ela vai alinhar o investimento necessário e, principalmente, te mostrar como vamos fazer pra você ter um atendimento correto para sua saúde.\n\n"
+    "Fique tranquilo(a), esse primeiro contato é gratuito. Pra você marcar essa reunião, basta seguir com a nossa conversa, certo?"
+)
 
-MSG_VALORES_REAJUSTE = MSG_VALORES_CIRURGIA
+MSG_VALORES_REAJUSTE = (
+    "Eu entendo que o valor é importante, mas deixe-me te fazer uma pergunta: quanto vale uma estratégia jurídica que realmente garante o reequilíbrio do seu plano contra reajustes abusivos?\n\n"
+    "O seu caso exige uma estratégia jurídica personalizada e de alto nível. A Dra. Lethicia Fernanda entende que questões contratuais de alta complexidade devem ser tratadas de forma personalizada.\n\n"
+    "Precisamos de uma Reunião de Viabilização Jurídica rápida, de 20 minutos, via vídeo. É o momento onde ela vai alinhar o investimento necessário e, principalmente, te mostrar como vamos fazer pra você ter o reequilíbrio do seu plano.\n\n"
+    "Fique tranquilo(a), esse primeiro contato é gratuito. Pra você marcar essa reunião, basta seguir com a nossa conversa, certo?"
+)
 
 MSG_VALORES_ANALISE_INICIAL = (
     "Eu entendo que o valor é um ponto importante para você, mas antes de falarmos de números, precisamos falar de segurança: "
@@ -510,23 +535,13 @@ MSG_EXPLICACAO_SUS = (
     "Isso faria diferença na sua vida agora?"
 )
 
-MSG_HONORARIOS_SUS = (
-    "Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. "
-    "Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje "
-    "para contratar o suporte jurídico necessário e resolver sua situação?"
-)
+MSG_HONORARIOS_SUS = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
 
-MSG_REVERTER_SUS = (
-    "Nesse caso só é possível revertermos a negativa/demora do SUS com medidas judiciais. "
-    "Você está no momento exato de agirmos para buscar o seu direito judicialmente. "
-    "Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei."
-)
 
-MSG_ENCAMINHAR_SUS = (
-    "Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. "
-    "Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. "
-    "Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
-)
+MSG_INVESTIMENTO_JURIDICO = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
+MSG_REVERTER_SUS = """Nesse caso só é possível revertermos a negativa/demora do SUS com medidas judiciais. Você está no momento exato de agirmos para buscar o seu direito judicialmente. Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei."""
+
+MSG_SUS_ENCAMINHAR_DRA = """Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
 
 MSG_SIM_HONORARIOS_SUS_DECISAO = (
     "Antes de agendarmos a nossa reunião: além de você, tem mais alguém que participe das decisões familiares ou financeiras, "
@@ -570,7 +585,7 @@ MSG_SUS_CONSULTA_AJUDA_Q4 = (
     "Para a Dra. Lethicia validar o seu protocolo de urgência, você possui o print do App Meu SUS Digital ou o comprovante da fila de espera ou o comprovante do SISREG?"
 )
 MSG_SUS_CONSULTA_AJUDA_Q4B = (
-    "Você tem o pedido/encaminhamento do médico pra sua consulta?"
+    "Você tem o pedido/encaminhamento do médico para sua consulta?"
 )
 MSG_SUS_CONSULTA_PROTOCOLO = (
     "Para resolver isso, eu trabalho com um Protocolo de Liberação Urgente. "
@@ -681,7 +696,7 @@ PS_SITUACAO = (
 # ============================================
 PS_REP_Q1 = "Você realizou a cirurgia bariátrica ou teve uma perda de peso expressiva através de dieta, exercícios ou uso das canetas emagrecedoras (Mounjaro, Ozempic, Tirzepatida...)?"
 PS_REP_Q2 = "Você já chegou ou ainda falta pouco pro peso que gostaria?\n\n1️⃣ Já cheguei à minha meta\n2️⃣ Ainda não"
-PS_REP_FALTAM_META = "Faltam quantos quilos para você chegar à meta de peso que gostaria?"
+PS_REP_FALTAM_META = """Faltam quantos quilos para você chegar à meta de peso que gostaria?"""
 PS_REP_KG_PERDIDOS = "Quantos kg você perdeu no processo de emagrecimento?"
 
 PS_REP_MAIS6_PARABENS = (
@@ -725,7 +740,7 @@ PS_REP_MAIS6_ATENDIMENTO = (
 )
 
 PS_REP_MAIS6_INVESTIMENTO = (
-    "O investimento no atendimento particular é de R$ 97,00 e é feito online.\n\n"
+    "O investimento no atendimento particular é de R$ 97,00 e é feito on-line.\n\n"
     "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
     "• Estratégia Jurídica: Prova técnica de que seu caso é obrigatório pelo plano, com base na lei e nas decisões judiciais mais recentes.\n"
     "• Análise de Viabilidade: Avaliação real das chances de sucesso do seu caso e orientações sobre como corrigir falhas que podem levar à negativa do plano OU da justiça.\n"
@@ -1260,12 +1275,6 @@ MSG_PRE_POS_BUSCA_1 = (
     "Existem regras bem específicas que os planos são obrigados a seguir e, quando descumprem, é possível reverter isso."
 )
 
-MSG_INVESTIMENTO_PS = (
-    "Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. "
-    "Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje "
-    "para contratar o suporte jurídico necessário e resolver sua situação?"
-)
-
 MSG_PRE_POS_BUSCA_2 = (
     "Aqui no escritório, atuamos exatamente com esse tipo de situação, tanto na parte de orientação quanto na judicialização, quando necessário.\n"
     "Cada caso tem detalhes importantes que fazem toda a diferença no resultado por isso eu preciso entender exatamente em que momento você está agora."
@@ -1279,6 +1288,8 @@ PS_POS_BUSCA = (
     "2️⃣ Ainda não tenho a negativa, mas preciso me preparar: Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
     "3️⃣ Preciso de uma consultoria jurídica: Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória."
 )
+
+PS_POS_BUSCA_FINAL = """Pronto! Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
 
 # Mensagens das opções (atualizadas)
 PS_OP1_PERGUNTA = (
@@ -1325,12 +1336,6 @@ PS_OP3_PAGAMENTO = (
 PS_OP3_CONFIRMACAO = "Após realizar o pagamento e ser dada baixa no nosso financeiro, alguém da nossa equipe vai entrar em contato o quanto antes pra marcar seu atendimento na agenda da Dra. Lethicia."
 
 # Opção 4 removida - agora temos apenas 3 opções
-
-MSG_ENCAMINHAR_PLANO = (
-    "Pronto! Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. "
-    "Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. "
-    "Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."
-)
 
 # Encerramento geral
 PS_ENCERRAMENTO = (
@@ -1623,6 +1628,24 @@ def processar(resposta: str):
     estado = st.session_state.estado
     dados  = st.session_state.dados
 
+
+    if estado == "AGUARDANDO_INVESTIMENTO":
+        dados["investimento_planejado"] = resposta
+        proximas = st.session_state.get("investimento_proximas_mensagens", [])
+        proximo_estado = st.session_state.get("investimento_proximo_estado")
+        st.session_state.investimento_proximas_mensagens = []
+        st.session_state.investimento_proximo_estado = None
+
+        for item in proximas:
+            if isinstance(item, str):
+                add_bot(item)
+
+        if proximo_estado:
+            st.session_state.estado = proximo_estado
+        else:
+            st.session_state.estado = "FIM"
+        return
+
     # Atualiza timestamp da última resposta do usuário
     st.session_state.aguardando_resposta_desde = None
 
@@ -1752,14 +1775,13 @@ def processar(resposta: str):
             add_bot(MSG_SUS_CONSULTA_PROTOCOLO)
     elif estado == "SUS_CONSULTA_PROTOCOLO":
         if _sim(resposta):
-            st.session_state.estado = "SUS_CONSULTA_HONORARIOS"
-            add_bot("Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?")
+            solicitar_investimento("SUS_CONSULTA_HONORARIOS")
+            return
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
     elif estado == "SUS_CONSULTA_HONORARIOS":
-        dados["valor_investimento"] = resposta
-        add_bot("Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento.")
+        add_bot(MSG_SUS_ENCAMINHAR_DRA)
         st.session_state.estado = "FIM"
 
     # FLUXO EXAME
@@ -1820,14 +1842,13 @@ def processar(resposta: str):
             add_bot(MSG_SUS_EXAME_PROTOCOLO)
     elif estado == "SUS_EXAME_PROTOCOLO":
         if _sim(resposta):
-            st.session_state.estado = "SUS_EXAME_HONORARIOS"
-            add_bot("Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?")
+            solicitar_investimento("SUS_EXAME_HONORARIOS")
+            return
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
     elif estado == "SUS_EXAME_HONORARIOS":
-        dados["valor_investimento"] = resposta
-        add_bot("Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento.")
+        add_bot(MSG_SUS_ENCAMINHAR_DRA)
         st.session_state.estado = "FIM"
 
     # ---- SUS CIRURGIA ----
@@ -1953,10 +1974,13 @@ def processar(resposta: str):
             st.session_state.estado = "FIM"
 
     elif estado == "HONORARIOS_SUS":
-        dados["valor_investimento"] = resposta
-        add_bot(MSG_REVERTER_SUS)
-        add_bot(MSG_ENCAMINHAR_SUS)
-        st.session_state.estado = "FIM"
+        if _sim(resposta):
+            add_bot(MSG_REVERTER_SUS)
+            add_bot(MSG_SUS_ENCAMINHAR_DRA)
+            st.session_state.estado = "FIM"
+        else:
+            add_bot(MSG_ENCERRAMENTO_SUS)
+            st.session_state.estado = "FIM"
 
     # =====================================================================
     # PLANO DE SAÚDE
@@ -2022,9 +2046,8 @@ def processar(resposta: str):
         dados["negativa_escrita"] = resposta
         # Envia mensagens pré-pos busca
         add_bot(MSG_PRE_POS_BUSCA_1)
-        add_bot(MSG_PRE_POS_BUSCA_2)
-        st.session_state.estado = "PS_POS_BUSCA"
-        add_bot(PS_POS_BUSCA)
+        solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+        return
 
     # Caminho SIM - Situação
     elif estado == "PS_SITUACAO":
@@ -2157,15 +2180,12 @@ def processar(resposta: str):
                 if q == PS_OUTRO_DEMANDA_Q7:
                     # Após última pergunta, envia mensagens pré-pos busca
                     add_bot(MSG_PRE_POS_BUSCA_1)
-                    add_bot(MSG_PRE_POS_BUSCA_2)
-                    st.session_state.estado = "PS_POS_BUSCA"
-                    add_bot(PS_POS_BUSCA)
+                    solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+                    return
         else:
             add_bot(MSG_PRE_POS_BUSCA_1)
-            add_bot(MSG_INVESTIMENTO_PS)
-            add_bot(MSG_PRE_POS_BUSCA_2)
-            st.session_state.estado = "PS_POS_BUSCA"
-            add_bot(PS_POS_BUSCA)
+            solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+            return
 
     # Coletor genérico
     elif estado == "PS_PERGUNTAS_COLETOR":
@@ -2627,23 +2647,28 @@ def processar(resposta: str):
                     else:
                         add_bot(PS_PROVA_SOCIAL_TEA_A11)
             add_bot(MSG_PRE_POS_BUSCA_1)
-            add_bot(MSG_INVESTIMENTO_PS)
-            add_bot(MSG_PRE_POS_BUSCA_2)
-            st.session_state.estado = "PS_POS_BUSCA"
-            add_bot(PS_POS_BUSCA)
+            solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+            return
 
     # ---- NEGATIVA DE MATERIAL ----
     elif estado == "PS_NEG_MATERIAL":
         dados["neg_material"] = resposta
         add_bot(MSG_PRE_POS_BUSCA_1)
-        add_bot(MSG_PRE_POS_BUSCA_2)
-        st.session_state.estado = "PS_POS_BUSCA"
-        add_bot(PS_POS_BUSCA)
+        solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+        return
 
     # ---- POS BUSCA (opções 1-3) ----
     elif estado == "PS_POS_BUSCA":
-        if "1" in resposta or "2" in resposta or "3" in resposta:
-            add_bot(MSG_ENCAMINHAR_PLANO)
+        resp_norm = _n(resposta)
+        if (
+            "1" in resposta
+            or "2" in resposta
+            or "3" in resposta
+            or "negativa" in resp_norm
+            or "preparar" in resp_norm
+            or "consultoria" in resp_norm
+        ):
+            add_bot(PS_POS_BUSCA_FINAL)
             st.session_state.estado = "FIM"
         else:
             add_bot(PS_POS_BUSCA)
@@ -2935,7 +2960,8 @@ def main():
             with c3: btn("📋 Tenho SISREG", "Tenho SISREG")
 
         elif estado in ("SUS_CONSULTA_PROTOCOLO", "SUS_EXAME_PROTOCOLO",
-                        "POS_PERGUNTAS_SUS", "PROPOSTA_SUS"):
+                        "SUS_CONSULTA_HONORARIOS", "SUS_EXAME_HONORARIOS",
+                        "POS_PERGUNTAS_SUS", "PROPOSTA_SUS", "HONORARIOS_SUS"):
             c1, c2 = st.columns(2)
             with c1: btn("✅ SIM", "SIM")
             with c2: btn("❌ NÃO", "NÃO")
