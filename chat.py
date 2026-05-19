@@ -1,3 +1,5 @@
+PS_ENDOMETRIOSE_IMPACTO_DOR = """Me conte uma coisa, as dores que você sente, estão te impedindo de fazer coisas simples do seu dia a dia, como trabalhar? E sangramentos, como é o seu fluxo no mês?"""
+
 """
 Aurora Bot - Assistente Jurídica em Direito da Saúde
 VERSÃO CORRIGIDA E COMPLETA COM NOVAS FUNCIONALIDADES
@@ -696,7 +698,12 @@ PS_SITUACAO = (
 # ============================================
 PS_REP_Q1 = "Você realizou a cirurgia bariátrica ou teve uma perda de peso expressiva através de dieta, exercícios ou uso das canetas emagrecedoras (Mounjaro, Ozempic, Tirzepatida...)?"
 PS_REP_Q2 = "Você já chegou ou ainda falta pouco pro peso que gostaria?\n\n1️⃣ Já cheguei à minha meta\n2️⃣ Ainda não"
-PS_REP_FALTAM_META = """Faltam quantos quilos para você chegar à meta de peso que gostaria?"""
+PS_REP_FALTAM_META = """Isso é mais comum do que você imagina, viu?
+Muitas pacientes chegam até nós justamente nessa fase da jornada.
+
+Hoje, para as cirurgias reparadoras, um dos pontos mais importantes é que o peso esteja mais estabilizado, porque isso influencia tanto na parte médica quanto na estratégia do pedido junto ao plano de saúde.
+
+Mas me conta: aproximadamente quantos quilos você ainda pretende perder?"""
 PS_REP_KG_PERDIDOS = "Quantos kg você perdeu no processo de emagrecimento?"
 
 PS_REP_MAIS6_PARABENS = (
@@ -714,48 +721,42 @@ PS_REP_MAIS6_MITO = (
     "Você sabia que o seu direito é exatamente o mesmo de quem fez bariátrica?"
 )
 
-PS_REP_MAIS6_GUIA_PERGUNTA = (
-    "Pois é! E tem um detalhe que quase ninguém te conta: Muitas pessoas cometem o erro de esperar o peso final "
-    "para só então entender seus direitos, e acabam perdendo meses em filas ou burocracias. Para te ajudar nessa jornada "
-    "e garantir que você não perca tempo quando chegar lá, eu preparei um pequeno 'Guia de Preparação Jurídica' "
-    "(não cobro nada por isso) para você já saber o que documentar desde agora, mesmo ainda estando no processo de perda de peso.\n\n"
-    "Posso te enviar?"
-)
+PS_REP_MAIS6_GUIA_PERGUNTA = """Nesse momento, o mais indicado ainda não é buscar as cirurgias reparadoras de imediato.
 
+Isso porque, para essa fase, é muito importante que você esteja mais próxima do peso que deseja e, principalmente, com o peso estabilizado. Isso acaba sendo relevante tanto para os médicos quanto para a própria estratégia do pedido junto ao plano de saúde."""
 PS_REP_MAIS6_GUIA_LINK = (
     "Aqui está o seu Guia! 📄\n"
     "Nele você vai ver que a prova da sua jornada começa hoje.\n"
     "https://drive.google.com/file/d/1-DzNkvpA8Uez5JOQ8GyMWjeS_Fd98VER/view?usp=drive_link"
 )
 
-PS_REP_MAIS6_DECISAO = (
-    "Mas me diga uma coisa: para você se sentir 100% segura, você prefere seguir as orientações do guia sozinha "
-    "ou gostaria que a Dra. Lethicia fizesse uma análise individual do seu caso para montar o seu plano de ação personalizado?"
-)
+PS_REP_MAIS6_DECISAO = """Por isso, neste momento você pode seguir de duas formas:
 
+1️⃣ Continuar seu processo de emagrecimento até alcançar e estabilizar o peso, para depois iniciarmos a preparação das reparadoras no momento mais adequado;
+
+ou
+
+2️⃣ Fazer um atendimento particular com a Dra. Lethicia para entender desde já:
+• quais requisitos costumam ser importantes;
+• o que você já pode começar a documentar;
+• quando normalmente é o momento ideal para buscar as reparadoras;
+• e quais cuidados podem evitar problemas futuros com o plano de saúde.
+
+Assim você consegue seguir sua jornada com mais segurança e direcionamento. 🌹
+
+O que você prefere?"""
 PS_REP_MAIS6_ATENDIMENTO = (
     "Perfeito! Para esse tipo de dúvida pontual, oferecemos o Atendimento Particular. Diferente da consultoria completa, "
     "aqui você tira todas as suas dúvidas, tem um direcionamento claro do seu caso e um especialista te responde de forma técnica "
     "e direta, analisando se o seu direito é garantido por lei. Isso te ajudaria?"
 )
 
-PS_REP_MAIS6_INVESTIMENTO = (
-    "O investimento no atendimento particular é de R$ 97,00 e é feito on-line.\n\n"
-    "É um atendimento individual e aprofundado onde você terá os seguintes benefícios:\n"
-    "• Estratégia Jurídica: Prova técnica de que seu caso é obrigatório pelo plano, com base na lei e nas decisões judiciais mais recentes.\n"
-    "• Análise de Viabilidade: Avaliação real das chances de sucesso do seu caso e orientações sobre como corrigir falhas que podem levar à negativa do plano OU da justiça.\n"
-    "• Guia de Direcionamento: Orientação sobre quais tipos de especialistas e exames você deve buscar para montar um dossiê forte, e onde focar para conseguir a documentação necessária.\n"
-    "• Análise de Viabilidade: Uma opinião profissional sobre se o seu caso tem chances reais de sucesso na justiça ou se é uma questão administrativa.\n\n"
-    "Podemos marcar um horário pra você na agenda da Dra. Lethicia?"
-)
+PS_REP_MAIS6_INVESTIMENTO = """O investimento no atendimento particular é de R$ 97,00 e é feito on-line. É um atendimento individual e aprofundado entre você e uma advogada especialista.
 
-PS_REP_MAIS6_ENCERRAMENTO = (
-    "Entendo perfeitamente e respeito sua decisão.\n\n"
-    "Vou encerrar o seu atendimento por aqui para priorizar os casos que já estão com procedimentos em andamento. "
-    "Lembre-se apenas que, no Direito da Saúde, o tempo é um fator determinante para o sucesso do tratamento.\n\n"
-    "Caso precise de suporte especializado no futuro, nossos canais continuam à disposição."
-)
+Podemos marcar um horário para você na agenda da Dra. Lethicia?"""
+PS_REP_MAIS6_ENCERRAMENTO = """Entendo perfeitamente e respeito sua decisão.
 
+Vou encerrar o seu atendimento por aqui. Quando você estiver mais próxima do peso desejado ou com o peso estabilizado, nossos canais continuam à disposição para te orientar no momento adequado. 🌹"""
 PS_REP_MAIS6_CALENDLY = "https://calendly.com/lethiciafernanda-adv-lxev/atendimento-particular"
 
 # NOVA MENSAGEM: Obrigada por compartilhar...
@@ -817,7 +818,7 @@ PS_REP_EMPATIA = (
 
 # NOVA MENSAGEM: Uma curiosidade que poucos sabem...
 PS_REP_CURIOSIDADE = (
-    "Uma curiosidade que poucos sabem: se você fosse pagar todas as cirurgias reparadoras do seu próprio bolso hoje, o investimento passaria facilmente dos R$ 20 mil reais, podendo chegar a mais de R$ 150 mil reais a depender de quais reparadoras você precisa, entre hospital e equipe. É um valor que foge da realidade de 99% dos brasileiros. Eu ajudo meus clientes a acessarem esse direito sem precisar desembolsar essa fortuna, afinal, o plano de saúde serve para isso. O investimento jurídico é apenas uma fração minúscula perto do que você vai economizar."
+    "Uma curiosidade que poucos sabem: se você fosse pagar todas as cirurgias reparadoras do seu próprio bolso hoje, o investimento passaria facilmente dos R$ 20 mil reais, podendo chegar a mais de R$ 150 mil reais a depender de quais reparadoras você precisa, entre hospital e equipe. É um valor que foge da realidade de 99% dos brasileiros. Eu ajudo meus clientes a acessarem esse direito sem precisar desembolsar essa fortuna, afinal, o plano de saúde serve para isso."
 )
 
 PS_REP_PROVA_SOCIAL_A1 = """Entendo perfeitamente o que você está passando. Muitos dos nossos clientes chegaram até nós com essa mesma angústia. Veja como foi a reação deles quando finalmente conseguiram a liberação do procedimento:\n\n
@@ -1282,11 +1283,11 @@ MSG_PRE_POS_BUSCA_2 = (
 
 # PS_POS_BUSCA ATUALIZADO (agora com 3 opções)
 PS_POS_BUSCA = (
-    "Obrigado por todas as informações. Já consigo ter um bom entendimento da sua situação.\n\n"
+    "\n\n"
     "Agora me diz: o que você está buscando nesse momento? Escolha a opção que mais se encaixa com onde você está agora:\n\n"
     "1️⃣ Já tenho a negativa do plano: Desejo orientação especializada para ingressar com a ação judicial e buscar a liberação do meu tratamento.\n\n"
     "2️⃣ Ainda não tenho a negativa, mas preciso me preparar: Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
-    "3️⃣ Preciso de uma consultoria jurídica: Desejo uma análise técnica sobre o meu caso de saúde. Indicado para dúvidas sobre reajustes abusivos (anual ou por faixa etária), períodos de carência, migração de plano (portabilidade) ou para saber se um tratamento específico tem cobertura obrigatória."
+    ""
 )
 
 PS_POS_BUSCA_FINAL = """Pronto! Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
@@ -1781,6 +1782,7 @@ def processar(resposta: str):
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
     elif estado == "SUS_CONSULTA_HONORARIOS":
+        dados["investimento_planejado_sus_consulta"] = resposta
         add_bot(MSG_SUS_ENCAMINHAR_DRA)
         st.session_state.estado = "FIM"
 
@@ -1848,6 +1850,7 @@ def processar(resposta: str):
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
     elif estado == "SUS_EXAME_HONORARIOS":
+        dados["investimento_planejado_sus_exame"] = resposta
         add_bot(MSG_SUS_ENCAMINHAR_DRA)
         st.session_state.estado = "FIM"
 
@@ -2455,6 +2458,17 @@ def processar(resposta: str):
             # Novo fluxo para quem ainda precisa perder mais de 6kg.
             st.session_state.estado = "PS_REP_MAIS6_KG_PERDIDOS"
             add_bot(PS_REP_MAIS6_PARABENS)
+    elif estado == "PS_REP_MAIS6_ATENDIMENTO":
+        dados["rep_mais6_atendimento"] = resposta
+        if _sim(resposta):
+            add_bot(PS_CONSULTA_PAGA_97)
+            st.session_state.estado = "PAGAMENTO_97"
+            return
+        else:
+            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
+            st.session_state.estado = "FIM"
+            return
+
     elif estado == "PS_REP_KG_PERDIDOS":
         dados["rep_kg_perdidos"] = resposta
         _perguntar_escala_urgencia("PS_REP_EMPATIA", PS_REP_EMPATIA, "PS_REP_EMPATIA", "plano_reparadora")
@@ -2474,31 +2488,43 @@ def processar(resposta: str):
         add_bot(PS_REP_MAIS6_GUIA_PERGUNTA)
     elif estado == "PS_REP_MAIS6_GUIA_PERGUNTA":
         dados["rep_mais6_guia"] = resposta
-        add_bot(PS_REP_MAIS6_GUIA_LINK)
+        add_bot(PS_REP_MAIS6_GUIA_PERGUNTA)
         st.session_state.estado = "PS_REP_MAIS6_DECISAO"
         add_bot(PS_REP_MAIS6_DECISAO)
+
     elif estado == "PS_REP_MAIS6_DECISAO":
-        n = _n(resposta)
-        if "análise" in n or "analise" in n or "individual" in n:
-            st.session_state.estado = "PS_REP_MAIS6_ATENDIMENTO_AJUDA"
-            add_bot(PS_REP_MAIS6_ATENDIMENTO)
-        else:
-            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
-            st.session_state.estado = "FIM"
-    elif estado == "PS_REP_MAIS6_ATENDIMENTO_AJUDA":
-        if _sim(resposta):
-            st.session_state.estado = "PS_REP_MAIS6_MARCAR"
+        dados["rep_mais6_decisao"] = resposta
+        resp_norm = _n(resposta)
+
+        if (
+            "atendimento" in resp_norm
+            or "análise" in resp_norm
+            or "analise" in resp_norm
+            or "individual" in resp_norm
+            or "1" in resposta
+            or "sim" in resp_norm
+            or "quero" in resp_norm
+        ):
+            st.session_state.estado = "PS_REP_MAIS6_ATENDIMENTO"
             add_bot(PS_REP_MAIS6_INVESTIMENTO)
-        else:
+            return
+
+        if (
+            "sozinho" in resp_norm
+            or "sozinha" in resp_norm
+            or "tentar" in resp_norm
+            or "2" in resposta
+            or "não" in resp_norm
+            or "nao" in resp_norm
+        ):
             add_bot(PS_REP_MAIS6_ENCERRAMENTO)
             st.session_state.estado = "FIM"
-    elif estado == "PS_REP_MAIS6_MARCAR":
-        if _sim(resposta):
-            st.session_state.estado = "PS_REP_MAIS6_PAGAMENTO"
-            add_bot("Perfeito! Vamos reservar o seu horário.\n\nComo deseja realizar o investimento do atendimento? Você prefere Pix ou Cartão de Crédito?")
-        else:
-            add_bot(PS_REP_MAIS6_ENCERRAMENTO)
-            st.session_state.estado = "FIM"
+            return
+
+        add_bot(PS_REP_MAIS6_DECISAO)
+        return
+
+
     elif estado == "PS_REP_MAIS6_PAGAMENTO":
         n = _n(resposta)
         if "cartão" in n or "cartao" in n or "crédito" in n or "credito" in n:
