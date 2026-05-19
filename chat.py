@@ -1,3 +1,4 @@
+
 PS_ENDOMETRIOSE_IMPACTO_DOR = """Me conte uma coisa, as dores que você sente, estão te impedindo de fazer coisas simples do seu dia a dia, como trabalhar? E sangramentos, como é o seu fluxo no mês?"""
 
 """
@@ -541,7 +542,11 @@ MSG_HONORARIOS_SUS = """Sabemos que investir na sua saúde e na solução do seu
 
 
 MSG_INVESTIMENTO_JURIDICO = """Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"""
-MSG_REVERTER_SUS = """Nesse caso só é possível revertermos a negativa/demora do SUS com medidas judiciais. Você está no momento exato de agirmos para buscar o seu direito judicialmente. Agora não é mais hora de esperar, é hora de exigir que o SUS cumpra a lei."""
+MSG_REVERTER_SUS = """Nesse caso só é possível revertermos a negativa/demora do SUS com medidas judiciais.
+
+Quero me antecipar: eu ainda não recebi uma negativa do SUS, mas sei que meu pedido pode ser preparado da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.
+
+Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
 
 MSG_SUS_ENCAMINHAR_DRA = """Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o SUS. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
 
@@ -704,6 +709,10 @@ Muitas pacientes chegam até nós justamente nessa fase da jornada.
 Hoje, para as cirurgias reparadoras, um dos pontos mais importantes é que o peso esteja mais estabilizado, porque isso influencia tanto na parte médica quanto na estratégia do pedido junto ao plano de saúde.
 
 Mas me conta: aproximadamente quantos quilos você ainda pretende perder?"""
+
+PS_REP_MAIS6_NAO_INDICADO = """Nesse momento, o mais indicado ainda não é buscar as cirurgias reparadoras de imediato.
+
+Isso porque, para essa fase, é muito importante que você esteja mais próxima do peso que deseja e, principalmente, com o peso estabilizado. Isso acaba sendo relevante tanto para os médicos quanto para a própria estratégia do pedido junto ao plano de saúde."""
 PS_REP_KG_PERDIDOS = "Quantos kg você perdeu no processo de emagrecimento?"
 
 PS_REP_MAIS6_PARABENS = (
@@ -721,9 +730,7 @@ PS_REP_MAIS6_MITO = (
     "Você sabia que o seu direito é exatamente o mesmo de quem fez bariátrica?"
 )
 
-PS_REP_MAIS6_GUIA_PERGUNTA = """Nesse momento, o mais indicado ainda não é buscar as cirurgias reparadoras de imediato.
-
-Isso porque, para essa fase, é muito importante que você esteja mais próxima do peso que deseja e, principalmente, com o peso estabilizado. Isso acaba sendo relevante tanto para os médicos quanto para a própria estratégia do pedido junto ao plano de saúde."""
+PS_REP_MAIS6_GUIA_PERGUNTA = PS_REP_MAIS6_NAO_INDICADO
 PS_REP_MAIS6_GUIA_LINK = (
     "Aqui está o seu Guia! 📄\n"
     "Nele você vai ver que a prova da sua jornada começa hoje.\n"
@@ -1273,7 +1280,8 @@ def _prova_social_sus_pos_respostas():
 # ============================================
 MSG_PRE_POS_BUSCA_1 = (
     "Eu analisei muitas situações semelhantes à sua, e posso te dizer com bastante segurança: a maioria dos casos envolvendo plano de saúde tem solução jurídica, mesmo quando o plano tenta negar.\n"
-    "Existem regras bem específicas que os planos são obrigados a seguir e, quando descumprem, é possível reverter isso."
+    "Existem regras bem específicas que os planos são obrigados a seguir e, quando descumprem, é possível reverter isso.\n\n"
+    "Sabemos que investir na sua saúde e na solução do seu problema é sua prioridade agora. Para alinharmos as expectativas desse atendimento, qual valor você planeja investir hoje para contratar o suporte jurídico necessário e resolver sua situação?"
 )
 
 MSG_PRE_POS_BUSCA_2 = (
@@ -1287,7 +1295,7 @@ PS_POS_BUSCA = (
     "Agora me diz: o que você está buscando nesse momento? Escolha a opção que mais se encaixa com onde você está agora:\n\n"
     "1️⃣ Já tenho a negativa do plano: Desejo orientação especializada para ingressar com a ação judicial e buscar a liberação do meu tratamento.\n\n"
     "2️⃣ Ainda não tenho a negativa, mas preciso me preparar: Quero me antecipar, eu ainda não recebi a negativa do plano, mas sei que meu pedido pode ser recusado. Quero me preparar da forma correta, com orientação jurídica, para aumentar minhas chances de aprovação do tratamento ou sucesso na ação judicial.\n\n"
-    ""
+    "3️⃣ Desejo uma análise técnica e direcionamento sobre o meu caso: Preciso de um diagnóstico jurídico especializado sobre a minha situação atual com o plano de saúde. Indicado para avaliar a viabilidade de um tratamento, checar a legalidade de laudos médicos, resolver problemas com reembolsos e negativas informais, ou esclarecer dúvidas sobre reajustes, carências e regras do contrato.\n\n"
 )
 
 PS_POS_BUSCA_FINAL = """Pronto! Já reuni todas as suas informações e vou encaminhá-las agora mesmo para a Dra. Lethicia. Ela vai analisar pessoalmente o seu relato e o momento em que você está com o plano. Fique atento(a) ao seu WhatsApp: em breve, entraremos em contato para realizar o seu atendimento."""
@@ -1970,20 +1978,16 @@ def processar(resposta: str):
 
     elif estado == "PROPOSTA_SUS":
         if _sim(resposta):
-            st.session_state.estado = "HONORARIOS_SUS"
-            add_bot(MSG_HONORARIOS_SUS)
+            solicitar_investimento("HONORARIOS_SUS")
+            return
         else:
             add_bot(MSG_ENCERRAMENTO_SUS)
             st.session_state.estado = "FIM"
 
     elif estado == "HONORARIOS_SUS":
-        if _sim(resposta):
-            add_bot(MSG_REVERTER_SUS)
-            add_bot(MSG_SUS_ENCAMINHAR_DRA)
-            st.session_state.estado = "FIM"
-        else:
-            add_bot(MSG_ENCERRAMENTO_SUS)
-            st.session_state.estado = "FIM"
+        dados["investimento_planejado_sus"] = resposta
+        add_bot(MSG_REVERTER_SUS)
+        st.session_state.estado = "FIM"
 
     # =====================================================================
     # PLANO DE SAÚDE
@@ -2575,29 +2579,16 @@ def processar(resposta: str):
         add_bot(PS_REP_Q5)
     elif estado == "PS_REP_Q5":
         dados["rep_q5"] = resposta
-        st.session_state.estado = "PS_REP_ACOMPANHAMENTO"
-        add_bot(PS_REP_ACOMPANHAMENTO)
-    elif estado == "PS_REP_ACOMPANHAMENTO":
-        if "acompanhamento" in _n(resposta) or "quer" in _n(resposta) or "dra" in _n(resposta):
-            add_bot(MSG_ACOMPANHAMENTO_JURIDICO)
-            add_bot(MSG_PRE_POS_BUSCA_2)
-            st.session_state.estado = "PS_POS_BUSCA"
-            add_bot(PS_POS_BUSCA)
-        elif "como funciona" in _n(resposta):
-            add_bot(MSG_ACOMPANHAMENTO_JURIDICO)
-            add_bot(MSG_PRE_POS_BUSCA_2)
-            st.session_state.estado = "PS_POS_BUSCA"
-            add_bot(PS_POS_BUSCA)
-        else:
-            add_bot(PS_ENCERRAMENTO)
-            st.session_state.estado = "FIM"
+        add_bot(MSG_PRE_POS_BUSCA_1)
+        solicitar_investimento("PS_POS_BUSCA", [MSG_PRE_POS_BUSCA_2, PS_POS_BUSCA])
+        return
 
     # ---- NEGATIVA DE CIRURGIA ----
     elif estado == "PS_NEG_CIR_ESP":
         dados["neg_cir_esp"] = resposta
 
         if "endometriose" in _n(resposta) or "1" in resposta:
-            st.session_state.perguntas_ativas = [PS_ENDO_Q1, PS_ENDO_Q2, PS_ENDO_Q3, PS_ENDO_Q4, PS_ENDO_Q5]
+            st.session_state.perguntas_ativas = [PS_ENDO_Q1, PS_ENDOMETRIOSE_IMPACTO_DOR, PS_ENDO_Q2, PS_ENDO_Q3, PS_ENDO_Q4, PS_ENDO_Q5]
         elif "bariátrica" in _n(resposta) or "bariatrica" in _n(resposta) or "2" in resposta:
             # Bariátrica: a mensagem explicativa vem imediatamente seguida da escala de urgência,
             # sem aguardar resposta nela. Depois da escala, o fluxo pergunta sobre acompanhamento multidisciplinar.
@@ -2693,6 +2684,10 @@ def processar(resposta: str):
             or "negativa" in resp_norm
             or "preparar" in resp_norm
             or "consultoria" in resp_norm
+            or "análise" in resp_norm
+            or "analise" in resp_norm
+            or "direcionamento" in resp_norm
+            or "diagnóstico" in resp_norm
         ):
             add_bot(PS_POS_BUSCA_FINAL)
             st.session_state.estado = "FIM"
@@ -2986,8 +2981,7 @@ def main():
             with c3: btn("📋 Tenho SISREG", "Tenho SISREG")
 
         elif estado in ("SUS_CONSULTA_PROTOCOLO", "SUS_EXAME_PROTOCOLO",
-                        "SUS_CONSULTA_HONORARIOS", "SUS_EXAME_HONORARIOS",
-                        "POS_PERGUNTAS_SUS", "PROPOSTA_SUS", "HONORARIOS_SUS"):
+                        "POS_PERGUNTAS_SUS", "PROPOSTA_SUS"):
             c1, c2 = st.columns(2)
             with c1: btn("✅ SIM", "SIM")
             with c2: btn("❌ NÃO", "NÃO")
@@ -3066,8 +3060,13 @@ def main():
 
         elif estado == "PS_REP_MAIS6_DECISAO":
             c1, c2 = st.columns(2)
-            with c1: btn("⚖️ ANÁLISE INDIVIDUAL", "ANÁLISE INDIVIDUAL")
-            with c2: btn("👤 SOZINHO(A)", "SOZINHO(A)")
+            with c1: btn("⚖️ ATENDIMENTO", "ANÁLISE INDIVIDUAL")
+            with c2: btn("👤 VOU TENTAR SOZINHO(A)", "SOZINHO(A)")
+
+        elif estado == "PS_REP_MAIS6_ATENDIMENTO":
+            c1, c2 = st.columns(2)
+            with c1: btn("✅ SIM", "SIM")
+            with c2: btn("❌ NÃO", "NÃO")
 
         elif estado in ("PS_REP_MAIS6_ATENDIMENTO_AJUDA", "PS_REP_MAIS6_MARCAR"):
             c1, c2 = st.columns(2)
@@ -3083,12 +3082,6 @@ def main():
             c1, c2 = st.columns(2)
             with c1: btn("✅ SIM", "SIM")
             with c2: btn("❌ NÃO", "NÃO")
-
-        elif estado == "PS_REP_ACOMPANHAMENTO":
-            c1, c2, c3 = st.columns(3)
-            with c1: btn("💙 Quero acompanhamento da Dra.", "quero acompanhamento")
-            with c2: btn("❓ Como funciona", "como funciona")
-            with c3: btn("👤 Não quero acompanhamento", "não quero")
 
         elif estado == "PS_NEG_CIR_ESP":
             opcoes = [
@@ -3146,7 +3139,7 @@ def main():
             opcoes = [
                 ("1️⃣ Já tenho a negativa do plano", "1"),
                 ("2️⃣ Ainda não tenho a negativa, mas preciso me preparar", "2"),
-                ("3️⃣ Preciso de uma consultoria jurídica", "3"),
+                ("3️⃣ Desejo uma análise técnica e direcionamento", "3"),
             ]
             cols = st.columns(3)
             for i, (label, val) in enumerate(opcoes):
